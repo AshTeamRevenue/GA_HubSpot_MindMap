@@ -2,25 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TR_GA_HubSpot_MindMap</title>
+    <title>TeamRevenue - HubSpot Growth Architecture</title>
+    <!-- Modern Tech Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Loads external Javascript File created locally containing sheetData -->
     <script src="data.js"></script>
     <style>
         :root { 
-            --hs-orange: #ff7a59; 
-            --hs-blue: #2d3e50; 
-            --hs-teal: #00bda5; 
-            --hs-light-bg: #f4f7f9;
+            --hs-orange: #ff7a59;
+            --hs-orange-glow: rgba(255, 122, 89, 0.6);
+            --tr-dark-bg: #0b1320; 
+            --tr-teal: #00bda5;
+            --tr-glass: rgba(11, 19, 32, 0.45);
+            --tr-glass-border: rgba(255, 255, 255, 0.1);
         }
+        
+        * { box-sizing: border-box; }
+        
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Inter', sans-serif;
             margin: 0; 
-            background: var(--hs-light-bg); 
-            overflow: hidden; 
-            height: 100vh; 
-            width: 100vw; 
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 10% 20%, #15243b 0%, var(--tr-dark-bg) 90%);
+            color: #ffffff;
         }
+
+        /* Frosted Glass Header */
+        .glass-header {
+            width: 100%;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            background: var(--tr-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--tr-glass-border);
+            z-index: 10;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, #ffffff, #a8b8d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            margin-left: 15px;
+            padding-left: 15px;
+            border-left: 1px solid rgba(255,255,255,0.2);
+            font-size: 14px;
+            font-weight: 400;
+            color: #8fa0ba;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #canvas-wrapper {
+            flex: 1; 
+            width: 100%;
+            position: relative;
+        }
+
         #canvas { 
             width: 100%; 
             height: 100%; 
@@ -31,47 +86,65 @@
         .node { cursor: pointer; }
         
         .node circle { 
-            fill: #fff; 
+            fill: var(--tr-dark-bg); 
             stroke: var(--hs-orange); 
             stroke-width: 3px; 
-            transition: fill 0.3s, stroke 0.3s;
+            transition: all 0.4s ease;
         }
-        .node circle:hover { fill: #fff1ed; }
+        .node circle:hover { 
+            fill: var(--hs-orange);
+            filter: drop-shadow(0 0 8px var(--hs-orange-glow));
+        }
         
         .node text { 
-            font-size: 13px; 
-            fill: var(--hs-blue); 
+            font-size: 14px; 
+            fill: #e1e7f0; 
             font-weight: 600; 
             pointer-events: none; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         
-        /* Styles for individual article nodes */
         .node--leaf text { 
             pointer-events: auto; 
-            font-weight: 500; 
+            font-weight: 400;
+            fill: #a2b2c9; 
+            transition: all 0.2s ease;
         }
+        
         .node--leaf text:hover { 
-            fill: var(--hs-teal); 
-            text-decoration: underline; 
+            fill: #ffffff; 
+            text-shadow: 0 0 8px rgba(255,255,255,0.4);
         }
+        
         .node--leaf circle {
-            stroke: var(--hs-blue);
+            stroke: var(--tr-teal);
             stroke-width: 2.5px;
+        }
+        .node--leaf circle:hover {
+            fill: var(--tr-teal);
+            filter: drop-shadow(0 0 8px rgba(0, 189, 165, 0.6));
         }
 
         .link { 
             fill: none; 
-            stroke: #cbd6e2; 
+            stroke: rgba(255,255,255,0.15); 
             stroke-width: 2px; 
-            opacity: 0.6; 
+            transition: stroke 0.3s ease;
         }
     </style>
 </head>
 <body>
-<svg id="canvas"></svg>
+
+<div class="glass-header">
+    <h1 class="header-title">TeamRevenue</h1>
+    <span class="header-subtitle">Growth Architect Protocol • Knowledge Base Mapping</span>
+</div>
+
+<div id="canvas-wrapper">
+    <svg id="canvas"></svg>
+</div>
 
 <script>
-    // Ensure data.js loaded successfully. If not, alert the user cleanly.
     if (typeof sheetData === 'undefined') {
         alert("CRITICAL ERROR: 'data.js' is missing! Please ensure the Python script has generated the latest data wrapper.");
     } else {
@@ -80,16 +153,16 @@
 
         const svg = d3.select("#canvas");
         const g = svg.append("g");
+        const wrapper = document.getElementById('canvas-wrapper');
         
-        // Setup Zoom and Panning
         const zoom = d3.zoom()
-            .scaleExtent([0.1, 3])
+            .scaleExtent([0.1, 4])
             .on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
 
-        const tree = d3.tree().nodeSize([45, 400]);
+        const tree = d3.tree().nodeSize([50, 450]);
         let root;
-        let i = 0; // for node ids
+        let i = 0; 
 
         const vpMapping = {
             "LEADERSHIP": ["Executive Strategy"],
@@ -99,7 +172,7 @@
             "CUSTOMER SUCCESS": ["CS Leadership", "Frontline Managers", "Service Ops", "Agent Enablement", "Retention Strategy"]
         };
 
-        const nestedData = { name: "HUBSPOT", children: [] };
+        const nestedData = { name: "HUBSPOT CORE", children: [] };
         Object.keys(vpMapping).forEach(vp => {
             const vpNode = { name: vp, children: [] };
             vpMapping[vp].forEach(dir => {
@@ -112,10 +185,9 @@
         });
 
         root = d3.hierarchy(nestedData);
-        root.x0 = 0; 
+        root.x0 = wrapper.clientHeight / 2; 
         root.y0 = 0;
 
-        // A helper to deeply collapse branches
         function collapseDeep(d) {
             if (d.children) {
                 d._children = d.children;
@@ -124,18 +196,17 @@
             }
         }
 
-        // Collapse all branches initially
         if (root.children) {
             root.children.forEach(collapseDeep);
         }
 
-        // Initial render
         update(root);
         
-        // Center it nicely using Zoom transformation
-        svg.call(zoom.transform, d3.zoomIdentity.translate(250, window.innerHeight / 2).scale(0.8));
+        const initialScale = 0.85;
+        const startX = wrapper.clientWidth * 0.15; 
+        const startY = wrapper.clientHeight / 2;
+        svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
 
-        // A helper to toggle children explicitly
         function toggle(d) {
             if (d.children) { 
                 d._children = d.children; 
@@ -146,7 +217,6 @@
             }
         }
 
-        // Creates standard diagonal paths between parents and children
         function diagonal(s, d) {
             return `M ${d.y} ${d.x}
                     C ${(s.y + d.y) / 2} ${d.x},
@@ -174,28 +244,26 @@
                 });
 
             nodeEnter.append("circle")
-                .attr("r", 1e-6)
-                .style("fill", d => d._children ? "var(--hs-orange)" : "#fff");
+                .attr("r", 1e-6);
 
             nodeEnter.append("text")
                 .attr("dy", ".35em")
-                .attr("x", d => d.children || d._children ? -15 : 15)
+                .attr("x", d => d.children || d._children ? -18 : 18)
                 .attr("text-anchor", d => d.children || d._children ? "end" : "start")
                 .text(d => d.data.name)
                 .style("fill-opacity", 1e-6);
 
             const nodeUpdate = nodeEnter.merge(node);
             nodeUpdate.transition()
-                .duration(500)
+                .duration(600)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
 
             nodeUpdate.select("circle")
-                .attr("r", 9)
-                .style("fill", d => d._children ? "var(--hs-orange)" : "#fff");
+                .attr("r", 10);
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
-                .attr("x", d => d.children || d._children ? -15 : 15)
+                .attr("x", d => d.children || d._children ? -18 : 18)
                 .attr("text-anchor", d => d.children || d._children ? "end" : "start");
             
             const nodeExit = node.exit().transition()
@@ -214,7 +282,7 @@
 
             const linkUpdate = linkEnter.merge(link);
             linkUpdate.transition()
-                .duration(500)
+                .duration(600)
                 .attr("d", d => diagonal(d.source, d.target));
 
             link.exit().transition()
