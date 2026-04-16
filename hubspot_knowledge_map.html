@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>TeamRevenue - HubSpot Growth Architecture</title>
+    
+    <!-- HubSpot Usage Tracking Engine -->
+    <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/6640927.js"></script>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230b1320%22 stroke=%22%2300bda5%22 stroke-width=%225%22/><text x=%2250%22 y=%2268%22 font-family=%22sans-serif%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22%23ff7a59%22 text-anchor=%22middle%22>TR</text></svg>">
-    <!-- Modern Tech Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -13,7 +16,7 @@
     <style>
         :root { 
             --hs-orange: #ff7a59;
-            --hs-orange-glow: rgba(255, 122, 89, 0.6);
+            --hs-orange-glow: rgba(255, 122, 89, 0.8);
             --tr-dark-bg: #0b1320; 
             --tr-teal: #00bda5;
             --tr-glass: rgba(11, 19, 32, 0.45);
@@ -35,7 +38,6 @@
             color: #ffffff;
         }
 
-        /* Frosted Glass Header */
         .glass-header {
             width: 100%;
             height: 70px;
@@ -47,13 +49,11 @@
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--tr-glass-border);
             z-index: 10;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .header-title {
             font-size: 22px;
             font-weight: 800;
-            letter-spacing: 0.5px;
             background: linear-gradient(90deg, #ffffff, #a8b8d0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -65,10 +65,32 @@
             padding-left: 15px;
             border-left: 1px solid rgba(255,255,255,0.2);
             font-size: 14px;
-            font-weight: 400;
             color: #8fa0ba;
-            letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .search-container {
+            margin-left: auto;
+            position: relative;
+        }
+
+        #node-search {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--tr-glass-border);
+            border-radius: 20px;
+            padding: 8px 18px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #node-search:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: var(--hs-orange);
+            box-shadow: 0 0 12px var(--hs-orange-glow);
         }
 
         #canvas-wrapper {
@@ -77,55 +99,66 @@
             position: relative;
         }
 
-        #canvas { 
-            width: 100%; 
-            height: 100%; 
-            cursor: grab; 
-        }
+        #canvas { width: 100%; height: 100%; cursor: grab; }
         #canvas:active { cursor: grabbing; }
         
+        #tooltip {
+            position: absolute;
+            background: rgba(11, 19, 32, 0.90);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--hs-orange);
+            border-radius: 8px;
+            padding: 14px 18px;
+            color: #e1e7f0;
+            font-size: 13px;
+            width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 100;
+            line-height: 1.5;
+        }
+        #tooltip strong {
+            color: var(--hs-orange);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
         .node { cursor: pointer; }
-        
         .node circle { 
             fill: var(--tr-dark-bg); 
             stroke: var(--hs-orange); 
             stroke-width: 3px; 
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
         }
         .node circle:hover { 
             fill: var(--hs-orange);
             filter: drop-shadow(0 0 8px var(--hs-orange-glow));
         }
-        
         .node text { 
             font-size: 14px; 
             fill: #e1e7f0; 
             font-weight: 600; 
             pointer-events: none; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
-        
         .node--leaf text { 
             pointer-events: auto; 
             font-weight: 400;
             fill: #a2b2c9; 
             transition: all 0.2s ease;
         }
-        
         .node--leaf text:hover { 
             fill: #ffffff; 
-            text-shadow: 0 0 8px rgba(255,255,255,0.4);
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
         }
-        
         .node--leaf circle {
             stroke: var(--tr-teal);
             stroke-width: 2.5px;
         }
-        .node--leaf circle:hover {
-            fill: var(--tr-teal);
-            filter: drop-shadow(0 0 8px rgba(0, 189, 165, 0.6));
-        }
-
+        
         .link { 
             fill: none; 
             stroke: rgba(255,255,255,0.15); 
@@ -138,16 +171,21 @@
 
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
-    <span class="header-subtitle">Growth Architect Protocol • Knowledge Base Mapping</span>
+    <span class="header-subtitle">Growth Architect MindMap</span>
+    
+    <div class="search-container">
+        <input type="text" id="node-search" placeholder="Search mind map (e.g. Forecasting)..." autocomplete="off">
+    </div>
 </div>
 
 <div id="canvas-wrapper">
+    <div id="tooltip"></div>
     <svg id="canvas"></svg>
 </div>
 
 <script>
     if (typeof sheetData === 'undefined') {
-        alert("CRITICAL ERROR: 'data.js' is missing! Please ensure the Python script has generated the latest data wrapper.");
+        alert("CRITICAL ERROR: 'data.js' is missing! Please await completion of the GitHub python script.");
     } else {
         const rawData = d3.csvParse(sheetData.trim());
         const data = rawData.filter(d => d.Parent && d.Name);
@@ -155,6 +193,7 @@
         const svg = d3.select("#canvas");
         const g = svg.append("g");
         const wrapper = document.getElementById('canvas-wrapper');
+        const tooltip = d3.select("#tooltip");
         
         const zoom = d3.zoom()
             .scaleExtent([0.1, 4])
@@ -177,7 +216,7 @@
         Object.keys(vpMapping).forEach(vp => {
             const vpNode = { name: vp, children: [] };
             vpMapping[vp].forEach(dir => {
-                const articles = data.filter(d => d.Parent === dir).map(d => ({ name: d.Name, url: d.URL }));
+                const articles = data.filter(d => d.Parent === dir).map(d => ({ name: d.Name, url: d.URL, summary: d.Summary }));
                 if (articles.length > 0) {
                     vpNode.children.push({ name: dir, children: articles });
                 }
@@ -233,14 +272,32 @@
             const node = g.selectAll("g.node").data(nodes, d => d.id || (d.id = ++i));
             
             const nodeEnter = node.enter().append("g")
-                .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
+                .attr("class", d => "node" + (!d.children && !d._children && d.data.url ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) { 
+                        // Ping HubSpot Analytics!
+                        var _hsq = window._hsq = window._hsq || [];
+                        _hsq.push(["trackEvent", { id: "Clicked MindMap Node", value: d.data.name }]);
                         window.open(d.data.url, "_blank"); 
                     } else if (d.children || d._children) { 
                         toggle(d); 
                         update(d); 
+                    }
+                })
+                .on("mouseover", function(e, d) {
+                    if (!d.children && !d._children && d.data.summary) {
+                        d3.select(this).select("circle").style("filter", "drop-shadow(0 0 12px var(--tr-teal))");
+                        tooltip.transition().duration(200).style("opacity", 1);
+                        tooltip.html(`<strong>${d.data.name}</strong>${d.data.summary}`)
+                            .style("left", (e.pageX + 25) + "px")
+                            .style("top", (e.pageY - 40) + "px");
+                    }
+                })
+                .on("mouseout", function(e, d) {
+                    if (!d.children && !d._children && d.data.summary) {
+                        d3.select(this).select("circle").style("filter", "none");
+                        tooltip.transition().duration(300).style("opacity", 0);
                     }
                 });
 
@@ -293,6 +350,50 @@
 
             nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
+
+        // Live Deep Search Logic
+        d3.select("#node-search").on("input", function() {
+            const query = this.value.toLowerCase().trim();
+            
+            // Clean up old searches
+            svg.selectAll("circle").style("stroke", d => (!d.children && !d._children && d.data.url ? "var(--tr-teal)" : "var(--hs-orange)"));
+            svg.selectAll("text").style("fill", d => (!d.children && !d._children && d.data.url ? "#a2b2c9" : "#e1e7f0")).style("font-weight", 600);
+            
+            if (query === "") return;
+
+            const ancestors = new Set();
+            const matches = root.descendants().filter(d => d.data.name.toLowerCase().includes(query));
+
+            if (matches.length > 0) {
+                matches.forEach(m => {
+                    let current = m;
+                    while (current) {
+                        ancestors.add(current.id);
+                        if (current._children && current.id !== m.id) {
+                            current.children = current._children; // Expand parent
+                            current._children = null;
+                        }
+                        current = current.parent;
+                    }
+                });
+
+                update(root);
+
+                // Ignite matches with neon yellow
+                svg.selectAll("g.node")
+                    .filter(d => matches.includes(d))
+                    .select("circle")
+                    .style("stroke", "#ffd700")  
+                    .style("stroke-width", "4px")
+                    .style("filter", "drop-shadow(0 0 10px #ffd700)");
+                
+                svg.selectAll("g.node")
+                    .filter(d => matches.includes(d))
+                    .select("text")
+                    .style("fill", "#ffd700")
+                    .style("font-weight", "800");
+            }
+        });
     }
 </script>
 </body>
