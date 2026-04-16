@@ -1,6 +1,6 @@
 import time
 import csv
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 
 library_structure = {
     "CEO": {
