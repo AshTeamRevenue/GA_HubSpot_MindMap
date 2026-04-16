@@ -174,7 +174,7 @@
     <span class="header-subtitle">Growth Architect MindMap</span>
     
     <div class="search-container">
-        <input type="text" id="node-search" placeholder="Search mind map (e.g. Forecasting)..." autocomplete="off">
+        <input type="text" id="node-search" placeholder="Search mind map (e.g. CPQ)..." autocomplete="off">
     </div>
 </div>
 
@@ -355,33 +355,47 @@
         d3.select("#node-search").on("input", function() {
             const query = this.value.toLowerCase().trim();
             
-            // Clean up old searches
+            // Clean up old searches (Reset everything to default colors)
             svg.selectAll("circle").style("stroke", d => (!d.children && !d._children && d.data.url ? "var(--tr-teal)" : "var(--hs-orange)"));
             svg.selectAll("text").style("fill", d => (!d.children && !d._children && d.data.url ? "#a2b2c9" : "#e1e7f0")).style("font-weight", 600);
+            svg.selectAll("circle").style("filter", "none");
             
             if (query === "") return;
 
-            const ancestors = new Set();
-            const matches = root.descendants().filter(d => d.data.name.toLowerCase().includes(query));
+            const matches = [];
+            
+            // 1. Custom recursive function to search expanded AND collapsed nodes
+            function searchNodes(node) {
+                if (node.data.name.toLowerCase().includes(query)) {
+                    matches.push(node);
+                }
+                const children = node.children || node._children;
+                if (children) {
+                    children.forEach(searchNodes);
+                }
+            }
+            
+            searchNodes(root);
 
             if (matches.length > 0) {
+                // 2. Expand all parents of the matched nodes
                 matches.forEach(m => {
-                    let current = m;
+                    let current = m.parent;
                     while (current) {
-                        ancestors.add(current.id);
-                        if (current._children && current.id !== m.id) {
-                            current.children = current._children; // Expand parent
+                        if (current._children) {
+                            current.children = current._children; // Expand it
                             current._children = null;
                         }
                         current = current.parent;
                     }
                 });
 
+                // 3. Force D3 to recalculate
                 update(root);
 
-                // Ignite matches with neon yellow
+                // 4. Ignite matches with neon yellow
                 svg.selectAll("g.node")
-                    .filter(d => matches.includes(d))
+                    .filter(d => matches.includes(d)) 
                     .select("circle")
                     .style("stroke", "#ffd700")  
                     .style("stroke-width", "4px")
@@ -392,6 +406,13 @@
                     .select("text")
                     .style("fill", "#ffd700")
                     .style("font-weight", "800");
+            }
+        });
+        
+        // Prevent enter key from doing anything weird
+        d3.select("#node-search").on("keydown", function(e) {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                e.preventDefault();
             }
         });
     }
