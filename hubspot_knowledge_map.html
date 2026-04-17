@@ -251,7 +251,6 @@
             originalNestedData.children.push(vpNode);
         });
 
-        // Initialize Native Closed Map
         resetMap();
         
         startX = wrapper.clientWidth * 0.15; 
@@ -288,7 +287,6 @@
             const nodes = root.descendants();
             const links = root.links();
 
-            // Unique ID binding is CRITICAL for aggressive node removal animations!
             const node = g.selectAll("g.node").data(nodes, d => d.data.name + "_" + d.depth);
             
             const nodeEnter = node.enter().append("g")
@@ -315,7 +313,8 @@
                 })
                 .on("mouseout", function(e, d) {
                     if (!d.children && !d._children && d.data.summary) {
-                        d3.select(this).select("circle").style("filter", "none");
+                        // Allow the search highlighting logic to persist if it was yellow!
+                        d3.select(this).select("circle").style("filter", null);
                         tooltip.transition().duration(300).style("opacity", 0);
                     }
                 });
@@ -383,9 +382,10 @@
                 svg.transition().duration(750)
                    .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
                 
-                svg.selectAll("circle").style("stroke", d => (!d.children && !d._children && d.data.url ? "var(--tr-teal)" : "var(--hs-orange)"));
-                svg.selectAll("text").style("fill", d => (!d.children && !d._children && d.data.url ? "#a2b2c9" : "#e1e7f0")).style("font-weight", 600);
-                svg.selectAll("circle").style("filter", "none");
+                // Remove all inline styles so the CSS stylesheet natively takes back over!
+                svg.selectAll("circle").style("stroke", null).style("filter", null).style("stroke-width", null);
+                svg.selectAll("text").style("fill", null).style("font-weight", null);
+                svg.selectAll("path.link").style("stroke", null).style("stroke-width", null);
             }
         }
 
@@ -394,7 +394,6 @@
             resetMap();
         });
 
-        // The "Aggressive Pruning" X-Ray Search
         d3.select("#node-search").on("input", function() {
             const query = this.value.toLowerCase().trim();
             
@@ -403,7 +402,11 @@
                 return;
             }
 
-            // Recursive function to slice away non-matching branches entirely
+            // Wipe specific inline styles before starting fresh search
+            svg.selectAll("circle").style("stroke", null).style("filter", null).style("stroke-width", null);
+            svg.selectAll("text").style("fill", null).style("font-weight", null);
+            svg.selectAll("path.link").style("stroke", null).style("stroke-width", null);
+
             function pruneTree(node) {
                 const isMatch = node.name.toLowerCase().includes(query);
                 let keptChildren = [];
@@ -429,28 +432,29 @@
             const prunedData = pruneTree(originalNestedData);
 
             if (prunedData) {
-                // Completely overwrite and redraw the D3 Core with ONLY the survivor branches
                 root = d3.hierarchy(prunedData);
                 root.x0 = wrapper.clientHeight / 2; 
                 root.y0 = 0;
-                // Leave everything inherently expanded so the user sees all matches
                 update(root);
 
-                // Add the orange neon highlight exclusively to exact text matches
+                // IGNITE EVERY NODE IN SURVIVING PATH NEON YELLOW
                 svg.selectAll("g.node")
-                    .filter(d => d.data.name.toLowerCase().includes(query)) 
                     .select("circle")
                     .style("stroke", "#ffd700")  
-                    .style("stroke-width", "4px")
-                    .style("filter", "drop-shadow(0 0 10px #ffd700)");
+                    .style("stroke-width", "3px")
+                    .style("filter", "drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))");
                 
                 svg.selectAll("g.node")
-                    .filter(d => d.data.name.toLowerCase().includes(query))
                     .select("text")
                     .style("fill", "#ffd700")
                     .style("font-weight", "800");
+
+                // IGNITE EVERY SURVIVING CONNECTOR LINE
+                svg.selectAll("path.link")
+                    .style("stroke", "rgba(255, 215, 0, 0.4)")
+                    .style("stroke-width", "2.5px");
+
             } else {
-                // If ZERO results found, blank the board
                 root = d3.hierarchy({name: "NO RESULTS FOUND", children: []});
                 update(root);
             }
