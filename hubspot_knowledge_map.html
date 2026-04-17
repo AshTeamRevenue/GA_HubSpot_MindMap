@@ -1,3 +1,15 @@
+Those are brilliant UX insights! When you hit a broad keyword like "meeting," the map will absolutely butterfly open into a massive web and it can definitely feel overwhelming. 
+
+Your logic is spot on. If you delete the search text, it makes perfect intuitive sense that the map should snap back to its clean root state. And having a "panic button" (Collapse All) next to the search bar is the perfect fail-safe to quickly reset the board.
+
+Here is what I'm adding:
+1.  **A "Collapse All" Button:** Styled with a sleek, glowing orange perimeter right next to the search bar. Clicking it completely resets the map, clears the search text, and flies the camera perfectly back to the starting center.
+2.  **Auto-Retract on Clear:** The Javascript listener is updated so that if the search box becomes completely empty (e.g., using Backspace), it automatically triggers the "Collapse All" protocol.
+
+You can copy and replace the entire code block below in GitHub. Give that auto-collapse a try and let me know how smooth it feels!
+
+````carousel
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,7 +83,31 @@
 
         .search-container {
             margin-left: auto;
+            display: flex;
+            align-items: center;
             position: relative;
+        }
+
+        /* NEW COLLAPSE ALL BUTTON */
+        #collapse-btn {
+            background: transparent;
+            border: 1px solid var(--hs-orange);
+            color: var(--hs-orange);
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+
+        #collapse-btn:hover {
+            background: rgba(255, 122, 89, 0.15);
+            box-shadow: 0 0 12px var(--hs-orange-glow);
         }
 
         #node-search {
@@ -89,8 +125,8 @@
 
         #node-search:focus {
             background: rgba(0, 0, 0, 0.5);
-            border-color: var(--hs-orange);
-            box-shadow: 0 0 12px var(--hs-orange-glow);
+            border-color: var(--tr-teal);
+            box-shadow: 0 0 12px rgba(0, 189, 165, 0.4);
         }
 
         #canvas-wrapper {
@@ -174,6 +210,8 @@
     <span class="header-subtitle">Growth Architect MindMap</span>
     
     <div class="search-container">
+        <!-- New Collapse Button -->
+        <button id="collapse-btn">Collapse All</button>
         <input type="text" id="node-search" placeholder="Search mind map (e.g. CPQ)..." autocomplete="off">
     </div>
 </div>
@@ -203,6 +241,10 @@
         const tree = d3.tree().nodeSize([50, 450]);
         let root;
         let i = 0; 
+        
+        // These track the starting camera position for the Collapse reset
+        const initialScale = 0.85;
+        let startX, startY;
 
         const vpMapping = {
             "LEADERSHIP": ["Executive Strategy"],
@@ -242,9 +284,9 @@
 
         update(root);
         
-        const initialScale = 0.85;
-        const startX = wrapper.clientWidth * 0.15; 
-        const startY = wrapper.clientHeight / 2;
+        // Compute and set the starting center camera
+        startX = wrapper.clientWidth * 0.15; 
+        startY = wrapper.clientHeight / 2;
         svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
 
         function toggle(d) {
@@ -351,20 +393,47 @@
             nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
 
+        // Global Reset Function
+        function resetMap() {
+            if (root.children) {
+                root.children.forEach(collapseDeep);
+            }
+            update(root);
+            
+            // Re-center camera smoothly
+            svg.transition().duration(750)
+               .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+
+            // Reset all styles
+            svg.selectAll("circle").style("stroke", d => (!d.children && !d._children && d.data.url ? "var(--tr-teal)" : "var(--hs-orange)"));
+            svg.selectAll("text").style("fill", d => (!d.children && !d._children && d.data.url ? "#a2b2c9" : "#e1e7f0")).style("font-weight", 600);
+            svg.selectAll("circle").style("filter", "none");
+        }
+
+        // COLLAPSE ALL BUTTON LISTENER
+        d3.select("#collapse-btn").on("click", function() {
+            document.getElementById("node-search").value = "";
+            resetMap();
+        });
+
         // Live Deep Search Logic
         d3.select("#node-search").on("input", function() {
             const query = this.value.toLowerCase().trim();
             
-            // Clean up old searches (Reset everything to default colors)
+            // Auto-collapse when search text is completely removed
+            if (query === "") {
+                resetMap();
+                return;
+            }
+
+            // Clean up old searches visually before running new search
             svg.selectAll("circle").style("stroke", d => (!d.children && !d._children && d.data.url ? "var(--tr-teal)" : "var(--hs-orange)"));
             svg.selectAll("text").style("fill", d => (!d.children && !d._children && d.data.url ? "#a2b2c9" : "#e1e7f0")).style("font-weight", 600);
             svg.selectAll("circle").style("filter", "none");
-            
-            if (query === "") return;
 
             const matches = [];
             
-            // 1. Custom recursive function to search expanded AND collapsed nodes
+            // X-ray search inside closed folders
             function searchNodes(node) {
                 if (node.data.name.toLowerCase().includes(query)) {
                     matches.push(node);
@@ -378,22 +447,22 @@
             searchNodes(root);
 
             if (matches.length > 0) {
-                // 2. Expand all parents of the matched nodes
+                // Force expand path to matches
                 matches.forEach(m => {
                     let current = m.parent;
                     while (current) {
                         if (current._children) {
-                            current.children = current._children; // Expand it
+                            current.children = current._children;
                             current._children = null;
                         }
                         current = current.parent;
                     }
                 });
 
-                // 3. Force D3 to recalculate
+                // Update graphic
                 update(root);
 
-                // 4. Ignite matches with neon yellow
+                // Ignite matches
                 svg.selectAll("g.node")
                     .filter(d => matches.includes(d)) 
                     .select("circle")
@@ -409,7 +478,7 @@
             }
         });
         
-        // Prevent enter key from doing anything weird
+        // Prevent enter key submission
         d3.select("#node-search").on("keydown", function(e) {
             if (e.key === "Enter" || e.keyCode === 13) {
                 e.preventDefault();
@@ -419,3 +488,5 @@
 </script>
 </body>
 </html>
+```
+````
