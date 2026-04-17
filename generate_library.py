@@ -2,6 +2,7 @@ import time
 import csv
 import json
 import datetime
+import os
 from duckduckgo_search import DDGS
 
 print("Loading external JSON taxonomy...")
@@ -21,10 +22,14 @@ except FileNotFoundError:
     semantic_dict = {}
 
 print("Initiating ULTIMATE Data Mine (VPs + Directors + Field Reps)...")
+
+# Write to a TEMPORARY file first so we don't destroy the DB if banned!
+temp_csv = "TEMP_GA_Reference_Library_V2.csv"
 csv_path = "GA_Reference_Library_V2.csv"
 js_path = "data.js"
+article_count = 0
 
-with open(csv_path, "w", encoding="utf-8", newline="") as f:
+with open(temp_csv, "w", encoding="utf-8", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["ID", "Name", "Parent", "URL", "Summary"])
     
@@ -35,7 +40,8 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                     topic_id = f"{vp[:3]}-{director[:3]}".upper().replace(" ", "")
                     query = f"site:knowledge.hubspot.com {topic}"
                     try:
-                        results = list(ddgs.text(query, max_results=6)) 
+                        # Use html backend to bypass heavy API robot-blocks
+                        results = list(ddgs.text(query, max_results=5, backend="html")) 
                         for i, r in enumerate(results):
                             title = r.get('title', '').split('|')[0].strip()
                             url = r.get('href', '')
@@ -44,10 +50,27 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                             blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/']
                             if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs):
                                 writer.writerow([f"{topic_id}-{i+1}", title, director, url, summary])
+                                article_count += 1
                         print(f"Verified cluster for: {topic}")
                     except Exception as e:
-                        print(f"Error: {e}")
-                    time.sleep(2)
+                        print(f"Error scraping {topic}: {e}")
+                        
+                    # Throttle heavily to mimic human speed and avoid locks
+                    time.sleep(4)
+
+# ==========================================
+# DATABASE PROTECTION FAILSAFE
+# ==========================================
+if article_count < 20:
+    print(f"\n[CRITICAL ERROR] Only mapped {article_count} articles.")
+    print("DuckDuckGo has temporarily shadowbanned the GitHub server for speed limits.")
+    print("ABORTING sync to protect the existing database from being erased!")
+    os.remove(temp_csv)
+    exit(1)
+
+# If it passed protection, overwrite the real CSV database securely
+import shutil
+shutil.move(temp_csv, csv_path)
 
 print("\n--- MASTER LIBRARY V4 COMPLETE ---")
 
@@ -62,4 +85,4 @@ with open(js_path, "w", encoding="utf-8") as f:
     f.write(f"const lastSynced = '{last_synced}';\n")
     f.write(f"const semanticDictionary = {json.dumps(semantic_dict)};\n")
 
-print("D3 Component (data.js) updated successfully!")
+print("D3 Component (data.js) successfully armed and updated!")
