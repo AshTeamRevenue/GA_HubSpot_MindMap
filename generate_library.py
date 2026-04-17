@@ -12,6 +12,14 @@ except FileNotFoundError:
     print("CRITICAL: taxonomy.json not found! Exiting.")
     exit(1)
 
+print("Loading semantic dictionary...")
+try:
+    with open("dictionary.json", "r", encoding="utf-8") as f:
+        semantic_dict = json.load(f)
+except FileNotFoundError:
+    print("Warning: dictionary.json not found. Using empty dictionary.")
+    semantic_dict = {}
+
 print("Initiating ULTIMATE Data Mine (VPs + Directors + Field Reps)...")
 csv_path = "GA_Reference_Library_V2.csv"
 js_path = "data.js"
@@ -41,10 +49,10 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                         print(f"Error: {e}")
                     time.sleep(2)
 
-print("\n--- MASTER LIBRARY V3 COMPLETE ---")
+print("\n--- MASTER LIBRARY V4 COMPLETE ---")
 
-print("Generating live Javascript data module with freshness stamp...")
-last_synced = datetime.datetime.now(datetime.UTC).strftime("%B %d, %Y")
+print("Generating live Javascript data module with semantic payload...")
+last_synced = datetime.datetime.now(datetime.timezone.utc).strftime("%B %d, %Y")
 
 with open(csv_path, "r", encoding="utf-8") as f:
     csv_content = f.read()
@@ -52,5 +60,6 @@ with open(csv_path, "r", encoding="utf-8") as f:
 with open(js_path, "w", encoding="utf-8") as f:
     f.write(f"const sheetData = {repr(csv_content.strip())};\n")
     f.write(f"const lastSynced = '{last_synced}';\n")
+    f.write(f"const semanticDictionary = {json.dumps(semantic_dict)};\n")
 
 print("D3 Component (data.js) updated successfully!")
