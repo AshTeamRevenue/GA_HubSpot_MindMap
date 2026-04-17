@@ -438,10 +438,30 @@
             svg.selectAll("text").style("fill", null).style("font-weight", null);
             svg.selectAll("path.link").style("stroke-width", null);
 
+            // GLOBAL SEMANTIC DICTIONARY MAPPER
+            let targetKeywords = [query];
+            if (typeof semanticDictionary !== 'undefined') {
+                for (const concept in semanticDictionary) {
+                    if (query.includes(concept) || concept.includes(query)) {
+                        targetKeywords = targetKeywords.concat(semanticDictionary[concept].map(k => k.toLowerCase()));
+                    }
+                }
+            }
+
             function pruneTree(node) {
-                const isMatch = node.name.toLowerCase().includes(query);
-                let keptChildren = [];
+                let isMatch = false;
                 
+                // Scan against ALL translated keywords (Summaries & Titles)
+                for (const keyword of targetKeywords) {
+                    if (node.name.toLowerCase().includes(keyword)) {
+                        isMatch = true; break;
+                    }
+                    if (node.summary && node.summary.toLowerCase().includes(keyword)) {
+                        isMatch = true; break;
+                    }
+                }
+                
+                let keptChildren = [];
                 if (node.children) {
                     node.children.forEach(c => {
                         const fc = pruneTree(c);
