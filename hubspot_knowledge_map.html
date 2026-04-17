@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>TeamRevenue - HubSpot Growth Architecture</title>
-    
-    <!-- HubSpot Usage Tracking Engine -->
+
     <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/6640927.js"></script>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230b1320%22 stroke=%22%2300bda5%22 stroke-width=%225%22/><text x=%2250%22 y=%2268%22 font-family=%22sans-serif%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22%23ff7a59%22 text-anchor=%22middle%22>TR</text></svg>">
@@ -16,7 +15,6 @@
     <style>
         :root { 
             --hs-orange: #ff7a59;
-            --hs-orange-glow: rgba(255, 122, 89, 0.8);
             --tr-dark-bg: #0b1320; 
             --tr-teal: #00bda5;
             --tr-glass: rgba(11, 19, 32, 0.45);
@@ -76,6 +74,19 @@
             position: relative;
         }
 
+        #sync-badge {
+            margin-right: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--tr-teal);
+            background: rgba(0, 189, 165, 0.1);
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 189, 165, 0.3);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
         #collapse-btn {
             background: transparent;
             border: 1px solid var(--hs-orange);
@@ -94,7 +105,7 @@
 
         #collapse-btn:hover {
             background: rgba(255, 122, 89, 0.15);
-            box-shadow: 0 0 12px var(--hs-orange-glow);
+            box-shadow: 0 0 12px rgba(255, 122, 89, 0.8);
         }
 
         #node-search {
@@ -157,10 +168,6 @@
             stroke-width: 3px; 
             transition: all 0.3s ease;
         }
-        .node circle:hover { 
-            fill: var(--hs-orange);
-            filter: drop-shadow(0 0 8px var(--hs-orange-glow));
-        }
         .node text { 
             font-size: 14px; 
             fill: #e1e7f0; 
@@ -197,6 +204,7 @@
     <span class="header-subtitle">Growth Architect MindMap</span>
     
     <div class="search-container">
+        <span id="sync-badge">Live Data: Pending Sync</span>
         <button id="collapse-btn">Collapse All</button>
         <input type="text" id="node-search" placeholder="Search mind map (e.g. Forecasting)..." autocomplete="off">
     </div>
@@ -211,6 +219,10 @@
     if (typeof sheetData === 'undefined') {
         alert("CRITICAL ERROR: 'data.js' is missing! Please await completion of the GitHub python script.");
     } else {
+        if (typeof lastSynced !== 'undefined') {
+            document.getElementById("sync-badge").innerText = "Live Data: " + lastSynced;
+        }
+
         const rawData = d3.csvParse(sheetData.trim());
         const data = rawData.filter(d => d.Parent && d.Name);
 
@@ -230,6 +242,15 @@
         
         const initialScale = 0.85;
         let startX, startY;
+
+        const nodeColors = {
+            "LEADERSHIP": "#ffd700",         // Gold
+            "REVOPS": "#2196f3",             // Deep Blue
+            "MARKETING": "#d500f9",          // Magenta
+            "SALES": "#00e676",              // Neon Green
+            "CUSTOMER SUCCESS": "#00bda5",   // Teal
+            "HUBSPOT CORE": "#ff7a59"        // HS Orange
+        };
 
         const vpMapping = {
             "LEADERSHIP": ["Executive Strategy"],
@@ -284,6 +305,13 @@
 
         function update(source) {
             tree(root);
+            
+            root.each(d => {
+                if (d.depth === 0) d.data.color = nodeColors["HUBSPOT CORE"];
+                else if (d.depth === 1) d.data.color = nodeColors[d.data.name] || "var(--tr-teal)";
+                else d.data.color = d.parent.data.color;
+            });
+
             const nodes = root.descendants();
             const links = root.links();
 
@@ -303,19 +331,21 @@
                     }
                 })
                 .on("mouseover", function(e, d) {
-                    if (!d.children && !d._children && d.data.summary) {
-                        d3.select(this).select("circle").style("filter", "drop-shadow(0 0 12px var(--tr-teal))");
-                        tooltip.transition().duration(200).style("opacity", 1);
-                        tooltip.html(`<strong>${d.data.name}</strong>${d.data.summary}`)
-                            .style("left", (e.pageX + 25) + "px")
-                            .style("top", (e.pageY - 40) + "px");
+                    if (!d.children && !d._children) {
+                        d3.select(this).select("circle").style("filter", `drop-shadow(0 0 12px ${d.data.color})`);
+                        
+                        if (d.data.summary) {
+                            tooltip.transition().duration(200).style("opacity", 1);
+                            tooltip.html(`<strong>${d.data.name}</strong>${d.data.summary}`)
+                                .style("left", (e.pageX + 25) + "px")
+                                .style("top", (e.pageY - 40) + "px");
+                        }
                     }
                 })
                 .on("mouseout", function(e, d) {
-                    if (!d.children && !d._children && d.data.summary) {
-                        // Allow the search highlighting logic to persist if it was yellow!
+                    if (!d.children && !d._children) {
                         d3.select(this).select("circle").style("filter", null);
-                        tooltip.transition().duration(300).style("opacity", 0);
+                        if (d.data.summary) tooltip.transition().duration(300).style("opacity", 0);
                     }
                 });
 
@@ -335,7 +365,8 @@
                 .attr("transform", d => `translate(${d.y},${d.x})`);
 
             nodeUpdate.select("circle")
-                .attr("r", 10);
+                .attr("r", 10)
+                .style("stroke", d => d.data.color);
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
@@ -360,6 +391,8 @@
             linkUpdate.transition()
                 .duration(600)
                 .attr("d", d => diagonal(d.source, d.target));
+            
+            linkUpdate.style("stroke", d => d.target.data.color).style("opacity", 0.4);
 
             link.exit().transition()
                 .duration(500)
@@ -382,10 +415,9 @@
                 svg.transition().duration(750)
                    .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
                 
-                // Remove all inline styles so the CSS stylesheet natively takes back over!
-                svg.selectAll("circle").style("stroke", null).style("filter", null).style("stroke-width", null);
+                svg.selectAll("circle").style("filter", null).style("stroke-width", null);
                 svg.selectAll("text").style("fill", null).style("font-weight", null);
-                svg.selectAll("path.link").style("stroke", null).style("stroke-width", null);
+                svg.selectAll("path.link").style("stroke-width", null).style("opacity", 0.4);
             }
         }
 
@@ -402,10 +434,9 @@
                 return;
             }
 
-            // Wipe specific inline styles before starting fresh search
-            svg.selectAll("circle").style("stroke", null).style("filter", null).style("stroke-width", null);
+            svg.selectAll("circle").style("filter", null).style("stroke-width", null);
             svg.selectAll("text").style("fill", null).style("font-weight", null);
-            svg.selectAll("path.link").style("stroke", null).style("stroke-width", null);
+            svg.selectAll("path.link").style("stroke-width", null);
 
             function pruneTree(node) {
                 const isMatch = node.name.toLowerCase().includes(query);
@@ -437,22 +468,20 @@
                 root.y0 = 0;
                 update(root);
 
-                // IGNITE EVERY NODE IN SURVIVING PATH NEON YELLOW
                 svg.selectAll("g.node")
                     .select("circle")
-                    .style("stroke", "#ffd700")  
                     .style("stroke-width", "3px")
-                    .style("filter", "drop-shadow(0 0 10px rgba(255, 215, 0, 0.6))");
+                    .style("filter", d => `drop-shadow(0 0 10px ${d.data.color})`);
                 
                 svg.selectAll("g.node")
                     .select("text")
-                    .style("fill", "#ffd700")
+                    .style("fill", d => d.data.color)
                     .style("font-weight", "800");
 
-                // IGNITE EVERY SURVIVING CONNECTOR LINE
                 svg.selectAll("path.link")
-                    .style("stroke", "rgba(255, 215, 0, 0.4)")
-                    .style("stroke-width", "2.5px");
+                    .style("stroke", d => d.target.data.color)
+                    .style("stroke-width", "2.5px")
+                    .style("opacity", 1); 
 
             } else {
                 root = d3.hierarchy({name: "NO RESULTS FOUND", children: []});
