@@ -1,39 +1,16 @@
 import time
 import csv
-from ddgs import DDGS
+import json
+import datetime
+from duckduckgo_search import DDGS
 
-library_structure = {
-    "LEADERSHIP": {
-        "Executive Strategy": ["HubSpot reporting dashboards for executives", "calculating ROI", "Business Units overview"]
-    },
-    "REVOPS": {
-        "Data Governance": ["HubSpot properties guide", "Data quality command center", "custom objects", "data sync"],
-        "Revenue Insights": ["Custom report builder", "multi-touch revenue attribution", "forecasting tool", "goals tool"],
-        "Portal Health & Security": ["HubSpot audit log", "Property health tool", "API limits overview", "SSO setup", "2FA enforcement"]
-    },
-    "MARKETING": {
-        "Marketing Leadership": ["Marketing analytics dashboards", "campaign ROI reporting", "lead source tracking"],
-        "Frontline Managers": ["Campaign approval workflows", "marketing team productivity reporting", "user permissions"],
-        "Marketing Ops": ["Marketing contacts billing", "GDPR compliance", "Preference centers", "Asset partitioning"],
-        "Demand Gen": ["Lead scoring", "Ads attribution", "Smart content", "Progressive profiling"],
-        "Content Execution": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager"]
-    },
-    "SALES": {
-        "Sales Leadership": ["Advanced sales forecasting", "revenue goal tracking", "territory management"],
-        "Frontline Managers": ["Coaching tools", "rep activity leaderboards", "deal pipeline reviews", "playbooks reporting"],
-        "Sales Ops": ["Deal pipelines", "Weighted forecast", "Line items and products", "Quotes and CPQ"],
-        "Field Sales (Outside)": ["HubSpot mobile app features", "Scan business cards", "Logging mobile calls", "QR code business cards"],
-        "Inside Sales (SDR/BDR)": ["Prospecting workspace", "Task queues", "Sequences", "LinkedIn Sales Navigator integration", "HubSpot calling tool"],
-        "Enablement": ["Sales playbooks", "Sales templates snippets", "Meeting tool config"]
-    },
-    "CUSTOMER SUCCESS": {
-        "CS Leadership": ["Net Revenue Retention reporting", "total churn dashboards", "customer journey analytics"],
-        "Frontline Managers": ["Ticket SLA reporting", "agent time-to-resolution", "rep scorecards"],
-        "Service Ops": ["Help desk setup", "SLA management", "Ticket pipelines", "Customer portal"],
-        "Agent Enablement": ["Omnichannel inbox", "Chat snippets", "Knowledge base article insertion", "Mobile service app"],
-        "Retention Strategy": ["Customer health scoring", "Renewal workflows", "NPS CSAT surveys"]
-    }
-}
+print("Loading external JSON taxonomy...")
+try:
+    with open("taxonomy.json", "r", encoding="utf-8") as f:
+        library_structure = json.load(f)
+except FileNotFoundError:
+    print("CRITICAL: taxonomy.json not found! Exiting.")
+    exit(1)
 
 print("Initiating ULTIMATE Data Mine (VPs + Directors + Field Reps)...")
 csv_path = "GA_Reference_Library_V2.csv"
@@ -41,7 +18,7 @@ js_path = "data.js"
 
 with open(csv_path, "w", encoding="utf-8", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(["ID", "Name", "Parent", "URL"])
+    writer.writerow(["ID", "Name", "Parent", "URL", "Summary"])
     
     with DDGS() as ddgs:
         for vp, directors in library_structure.items():
@@ -50,26 +27,30 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                     topic_id = f"{vp[:3]}-{director[:3]}".upper().replace(" ", "")
                     query = f"site:knowledge.hubspot.com {topic}"
                     try:
-                        results = list(ddgs.text(query, max_results=6)) # Pulling 6 for even more depth
+                        results = list(ddgs.text(query, max_results=6)) 
                         for i, r in enumerate(results):
-                            title = r['title'].split('|')[0].strip()
-                            url = r['href']
+                            title = r.get('title', '').split('|')[0].strip()
+                            url = r.get('href', '')
+                            summary = r.get('body', '').replace('"', "'").replace("\n", " ").strip()
+                            
                             blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/']
                             if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs):
-                                writer.writerow([f"{topic_id}-{i+1}", title, director, url])
+                                writer.writerow([f"{topic_id}-{i+1}", title, director, url, summary])
                         print(f"Verified cluster for: {topic}")
                     except Exception as e:
                         print(f"Error: {e}")
                     time.sleep(2)
 
+print("\n--- MASTER LIBRARY V3 COMPLETE ---")
 
-print("\n--- MASTER LIBRARY V2 COMPLETE ---")
+print("Generating live Javascript data module with freshness stamp...")
+last_synced = datetime.datetime.now(datetime.UTC).strftime("%B %d, %Y")
 
-print("Generating live Javascript data module for local D3 rendering...")
 with open(csv_path, "r", encoding="utf-8") as f:
     csv_content = f.read()
 
 with open(js_path, "w", encoding="utf-8") as f:
-    f.write(f"const sheetData = {repr(csv_content.strip())};")
+    f.write(f"const sheetData = {repr(csv_content.strip())};\n")
+    f.write(f"const lastSynced = '{last_synced}';\n")
 
 print("D3 Component (data.js) updated successfully!")
