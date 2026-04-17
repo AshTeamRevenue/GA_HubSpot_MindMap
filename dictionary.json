@@ -1,0 +1,20 @@
+{
+    "forecast": [
+        "mobile app", 
+        "deal pipelines", 
+        "sales forecasting", 
+        "dashboards",
+        "roi"
+    ],
+    "coaching": [
+        "scorecards", 
+        "playbooks", 
+        "leaderboards",
+        "reporting"
+    ],
+    "churn": [
+        "health scoring", 
+        "ticket SLA", 
+        "retention reporting"
+    ]
+}
