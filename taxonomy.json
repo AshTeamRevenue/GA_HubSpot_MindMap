@@ -3,7 +3,7 @@
         "Executive Strategy": ["HubSpot reporting dashboards for executives", "calculating ROI", "Business Units overview"]
     },
     "REVOPS": {
-        "Data Governance": ["HubSpot properties guide", "Data quality command center", "custom objects", "data sync"],
+        "Data Governance": ["HubSpot properties guide", "Data quality command center", "custom objects", "data sync", "Lead routing and assignment"],
         "Revenue Insights": ["Custom report builder", "multi-touch revenue attribution", "forecasting tool", "goals tool"],
         "Portal Health & Security": ["HubSpot audit log", "Property health tool", "API limits overview", "SSO setup", "2FA enforcement"]
     },
@@ -17,7 +17,7 @@
     "SALES": {
         "Sales Leadership": ["Advanced sales forecasting", "revenue goal tracking", "territory management"],
         "Frontline Managers": ["Coaching tools", "rep activity leaderboards", "deal pipeline reviews", "playbooks reporting"],
-        "Sales Ops": ["Deal pipelines", "Weighted forecast", "Line items and products", "Quotes and CPQ"],
+        "Sales Ops": ["Deal pipelines", "Weighted forecast", "Line items and products", "Quotes and CPQ", "Deal closed-won automation"],
         "Field Sales (Outside)": ["HubSpot mobile app features", "Scan business cards", "Logging mobile calls", "QR code business cards"],
         "Inside Sales (SDR/BDR)": ["Prospecting workspace", "Task queues", "Sequences", "LinkedIn Sales Navigator integration", "HubSpot calling tool"],
         "Enablement": ["Sales playbooks", "Sales templates snippets", "Meeting tool config"]
@@ -25,8 +25,14 @@
     "CUSTOMER SUCCESS": {
         "CS Leadership": ["Net Revenue Retention reporting", "total churn dashboards", "customer journey analytics"],
         "Frontline Managers": ["Ticket SLA reporting", "agent time-to-resolution", "rep scorecards"],
-        "Service Ops": ["Help desk setup", "SLA management", "Ticket pipelines", "Customer portal"],
+        "Service Ops": ["Help desk setup", "SLA management", "Ticket pipelines", "Customer portal", "Tiered SLA management"],
         "Agent Enablement": ["Omnichannel inbox", "Chat snippets", "Knowledge base article insertion", "Mobile service app"],
         "Retention Strategy": ["Customer health scoring", "Renewal workflows", "NPS CSAT surveys"]
+    },
+    "API": {
+        "Authentication & Limits": ["OAuth setup", "Private Apps", "API rate limits"],
+        "CRM APIs": ["Custom objects API", "Contacts API", "Company API"],
+        "Automation & Webhooks": ["Webhooks API", "Serverless functions", "Workflows API"],
+        "CMS & Site APIs": ["HubDB API", "GraphQL API", "CMS Hub API"]
     }
 }
