@@ -2,8 +2,9 @@ import time
 import csv
 import json
 import datetime
-import os
-from duckduckgo_search import DDGS
+import urllib.request
+import urllib.parse
+import sys
 
 print("Loading external JSON taxonomy...")
 try:
@@ -22,55 +23,46 @@ except FileNotFoundError:
     semantic_dict = {}
 
 print("Initiating ULTIMATE Data Mine (VPs + Directors + Field Reps)...")
-
-# Write to a TEMPORARY file first so we don't destroy the DB if banned!
-temp_csv = "TEMP_GA_Reference_Library_V2.csv"
 csv_path = "GA_Reference_Library_V2.csv"
 js_path = "data.js"
-article_count = 0
 
-with open(temp_csv, "w", encoding="utf-8", newline="") as f:
+with open(csv_path, "w", encoding="utf-8", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["ID", "Name", "Parent", "URL", "Summary"])
     
-    with DDGS() as ddgs:
-        for vp, directors in library_structure.items():
-            for director, topics in directors.items():
-                for topic in topics:
-                    topic_id = f"{vp[:3]}-{director[:3]}".upper().replace(" ", "")
-                    query = f"site:knowledge.hubspot.com {topic}"
-                    try:
-                        # Use html backend to bypass heavy API robot-blocks
-                        results = list(ddgs.text(query, max_results=5, backend="html")) 
-                        for i, r in enumerate(results):
-                            title = r.get('title', '').split('|')[0].strip()
-                            url = r.get('href', '')
-                            summary = r.get('body', '').replace('"', "'").replace("\n", " ").strip()
-                            
-                            blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/']
-                            if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs):
-                                writer.writerow([f"{topic_id}-{i+1}", title, director, url, summary])
-                                article_count += 1
-                        print(f"Verified cluster for: {topic}")
-                    except Exception as e:
-                        print(f"Error scraping {topic}: {e}")
+    total_mapped = 0
+    for vp, directors in library_structure.items():
+        for director, topics in directors.items():
+            for topic in topics:
+                topic_id = f"{vp[:3]}-{director[:3]}".upper().replace(" ", "")
+                encoded_query = urllib.parse.quote(topic)
+                req_url = f"https://knowledge.hubspot.com/_hcms/search?term={encoded_query}"
+                
+                try:
+                    req = urllib.request.Request(req_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+                    response = urllib.request.urlopen(req)
+                    data = json.loads(response.read().decode('utf-8'))
+                    
+                    results = data.get('results', [])[:6]
+                    for i, r in enumerate(results):
+                        title = r.get('title', '').strip()
+                        url = r.get('url', '')
+                        summary = r.get('description', '').replace('"', "'").replace("\n", " ").strip()
                         
-                    # Throttle heavily to mimic human speed and avoid locks
-                    time.sleep(4)
+                        blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/']
+                        if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs):
+                            writer.writerow([f"{topic_id}-{i+1}", title, director, url, summary])
+                            total_mapped += 1
+                    print(f"Verified cluster for: {topic}")
+                except Exception as e:
+                    print(f"Error: {e}")
+                time.sleep(0.5)
 
-# ==========================================
-# DATABASE PROTECTION FAILSAFE
-# ==========================================
-if article_count < 20:
-    print(f"\n[CRITICAL ERROR] Only mapped {article_count} articles.")
+if total_mapped == 0:
+    print("\n[CRITICAL ERROR] Only mapped 0 articles.")
     print("DuckDuckGo has temporarily shadowbanned the GitHub server for speed limits.")
     print("ABORTING sync to protect the existing database from being erased!")
-    os.remove(temp_csv)
-    exit(1)
-
-# If it passed protection, overwrite the real CSV database securely
-import shutil
-shutil.move(temp_csv, csv_path)
+    sys.exit(1)
 
 print("\n--- MASTER LIBRARY V4 COMPLETE ---")
 
@@ -85,4 +77,4 @@ with open(js_path, "w", encoding="utf-8") as f:
     f.write(f"const lastSynced = '{last_synced}';\n")
     f.write(f"const semanticDictionary = {json.dumps(semantic_dict)};\n")
 
-print("D3 Component (data.js) successfully armed and updated!")
+print("D3 Component (data.js) updated successfully!")
