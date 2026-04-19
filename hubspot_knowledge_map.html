@@ -172,6 +172,11 @@
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
     <span class="header-subtitle">Growth Architect Protocol • Knowledge Base Mapping</span>
+    
+    <button id="collapse-btn" style="margin-left: 20px; padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--tr-glass-border); font-family: 'Inter', sans-serif; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+        Collapse All
+    </button>
+
     <div class="search-container">
         <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'churn')...">
     </div>
@@ -264,6 +269,16 @@
             .scaleExtent([0.1, 4])
             .on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
+        
+        // Color scale for branches
+        const colorScale = d3.scaleOrdinal([...d3.schemeSet2, ...d3.schemeCategory10]);
+
+        document.getElementById('collapse-btn').addEventListener('click', () => {
+            if (root.children) {
+                root.children.forEach(collapseDeep);
+            }
+            update(root);
+        });
 
         const tree = d3.tree().nodeSize([50, 450]);
         let root;
@@ -367,7 +382,16 @@
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => d.isHighlighted ? "var(--tr-teal)" : null)
+                .style("stroke", d => {
+                    if (d.isHighlighted) return "var(--tr-teal)";
+                    if (!d.children && !d._children) return "var(--tr-teal)";
+                    if (d.depth === 0) return "var(--hs-orange)";
+                    
+                    // Distinct color based on the top-level parent (the VP category)
+                    let ancestor = d;
+                    while(ancestor.depth > 1) ancestor = ancestor.parent;
+                    return colorScale(ancestor.data.name);
+                })
                 .style("fill", d => d.isHighlighted ? "var(--tr-teal)" : null)
                 .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
 
