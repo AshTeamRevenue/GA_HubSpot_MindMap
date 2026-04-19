@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>TeamRevenue - HubSpot Growth Architecture</title>
-
-    <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/6640927.js"></script>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230b1320%22 stroke=%22%2300bda5%22 stroke-width=%225%22/><text x=%2250%22 y=%2268%22 font-family=%22sans-serif%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22%23ff7a59%22 text-anchor=%22middle%22>TR</text></svg>">
+    <!-- Modern Tech Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -15,7 +12,8 @@
     <style>
         :root { 
             --hs-orange: #ff7a59;
-            --tr-dark-bg: #0b1320; 
+            --hs-orange-glow: rgba(255, 122, 89, 0.6);
+            --tr-dark-bg: #0b1320; /* Deep slate blue */
             --tr-teal: #00bda5;
             --tr-glass: rgba(11, 19, 32, 0.45);
             --tr-glass-border: rgba(255, 255, 255, 0.1);
@@ -36,6 +34,7 @@
             color: #ffffff;
         }
 
+        /* Frosted Glass Header */
         .glass-header {
             width: 100%;
             height: 70px;
@@ -47,11 +46,13 @@
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--tr-glass-border);
             z-index: 10;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .header-title {
             font-size: 22px;
             font-weight: 800;
+            letter-spacing: 0.5px;
             background: linear-gradient(90deg, #ffffff, #a8b8d0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -63,174 +64,202 @@
             padding-left: 15px;
             border-left: 1px solid rgba(255,255,255,0.2);
             font-size: 14px;
+            font-weight: 400;
             color: #8fa0ba;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .search-container {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-
-        #sync-badge {
-            margin-right: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--tr-teal);
-            background: rgba(0, 189, 165, 0.1);
-            padding: 6px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 189, 165, 0.3);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        #collapse-btn {
-            background: transparent;
-            border: 1px solid var(--hs-orange);
-            color: var(--hs-orange);
-            border-radius: 20px;
-            padding: 8px 18px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            margin-right: 15px;
-            transition: all 0.3s ease;
-        }
-
-        #collapse-btn:hover {
-            background: rgba(255, 122, 89, 0.15);
-            box-shadow: 0 0 12px rgba(255, 122, 89, 0.8);
-        }
-
-        #node-search {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--tr-glass-border);
-            border-radius: 20px;
-            padding: 8px 18px;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            width: 300px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        #node-search:focus {
-            background: rgba(0, 0, 0, 0.5);
-            border-color: var(--tr-teal);
-            box-shadow: 0 0 12px rgba(0, 189, 165, 0.4);
-        }
-
+        /* SVG Canvas */
         #canvas-wrapper {
-            flex: 1; 
+            flex: 1; /* Takes remaining height dynamically */
             width: 100%;
             position: relative;
         }
 
-        #canvas { width: 100%; height: 100%; cursor: grab; }
+        #canvas { 
+            width: 100%; 
+            height: 100%; 
+            cursor: grab; 
+        }
         #canvas:active { cursor: grabbing; }
         
-        #tooltip {
-            position: absolute;
-            background: rgba(11, 19, 32, 0.90);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid var(--hs-orange);
-            border-radius: 8px;
-            padding: 14px 18px;
-            color: #e1e7f0;
-            font-size: 13px;
-            width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            pointer-events: none;
-            opacity: 0;
-            z-index: 100;
-            line-height: 1.5;
-        }
-        #tooltip strong {
-            color: var(--hs-orange);
-            display: block;
-            margin-bottom: 8px;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
         .node { cursor: pointer; }
+        
         .node circle { 
             fill: var(--tr-dark-bg); 
             stroke: var(--hs-orange); 
             stroke-width: 3px; 
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
+        .node circle:hover { 
+            fill: var(--hs-orange);
+            filter: drop-shadow(0 0 8px var(--hs-orange-glow));
+        }
+        
         .node text { 
             font-size: 14px; 
             fill: #e1e7f0; 
             font-weight: 600; 
             pointer-events: none; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
+        
+        /* Styles for individual article nodes */
         .node--leaf text { 
             pointer-events: auto; 
             font-weight: 400;
             fill: #a2b2c9; 
             transition: all 0.2s ease;
         }
+        
         .node--leaf text:hover { 
             fill: #ffffff; 
-            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+            text-shadow: 0 0 8px rgba(255,255,255,0.4);
         }
+        
         .node--leaf circle {
             stroke: var(--tr-teal);
             stroke-width: 2.5px;
         }
-        
+        .node--leaf circle:hover {
+            fill: var(--tr-teal);
+            filter: drop-shadow(0 0 8px rgba(0, 189, 165, 0.6));
+        }
+
         .link { 
             fill: none; 
             stroke: rgba(255,255,255,0.15); 
             stroke-width: 2px; 
             transition: stroke 0.3s ease;
         }
+        
+        /* Search Bar */
+        .search-container {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 280px;
+            padding: 10px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--tr-glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--tr-teal);
+            box-shadow: 0 0 10px rgba(0, 189, 165, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .search-input::placeholder {
+            color: #8fa0ba;
+        }
     </style>
 </head>
 <body>
 
+<!-- Premium Branding Header -->
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
-    <span class="header-subtitle">Growth Architect MindMap</span>
-    
+    <span class="header-subtitle">Growth Architect Protocol • Knowledge Base Mapping</span>
     <div class="search-container">
-        <span id="sync-badge">Live Data: Pending Sync</span>
-        <button id="collapse-btn">Collapse All</button>
-        <input type="text" id="node-search" placeholder="Search mind map (e.g. Forecasting)..." autocomplete="off">
+        <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'churn')...">
     </div>
 </div>
 
 <div id="canvas-wrapper">
-    <div id="tooltip"></div>
     <svg id="canvas"></svg>
 </div>
 
 <script>
     if (typeof sheetData === 'undefined') {
-        alert("CRITICAL ERROR: 'data.js' is missing! Please await completion of the GitHub python script.");
+        alert("CRITICAL ERROR: 'data.js' is missing! Please ensure the Python script has generated the latest data wrapper.");
     } else {
-        if (typeof lastSynced !== 'undefined') {
-            document.getElementById("sync-badge").innerText = "Live Data: " + lastSynced;
-        }
-
         const rawData = d3.csvParse(sheetData.trim());
-        const data = rawData.filter(d => d.Parent && d.Name);
+        const data = rawData.filter(d => d.Parent && d.Name).map(d => {
+            d.Name = d.Name.replace(/<\/?[^>]+(>|$)/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+            return d;
+        });
 
         const svg = d3.select("#canvas");
         const g = svg.append("g");
         const wrapper = document.getElementById('canvas-wrapper');
-        const tooltip = d3.select("#tooltip");
         
+        let semanticDict = {};
+        
+        fetch('dictionary.json')
+            .then(res => {
+                if (res.ok) return res.json();
+                return {};
+            })
+            .then(dict => {
+                semanticDict = dict;
+            })
+            .catch(err => console.error("Error loading dictionary:", err));
+            
+        const searchInput = document.getElementById('semantic-search');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            handleSearch(query);
+        });
+
+        function handleSearch(query) {
+            if (!query) {
+                root.descendants().forEach(d => d.isHighlighted = false);
+                update(root);
+                return;
+            }
+
+            let targets = [];
+            for (let [key, arr] of Object.entries(semanticDict)) {
+                if (key.toLowerCase().includes(query)) {
+                    targets = targets.concat(arr.map(t => t.toLowerCase()));
+                }
+            }
+            if (targets.length === 0) targets.push(query);
+
+            root.descendants().forEach(d => d.isHighlighted = false);
+
+            function searchTree(node) {
+                let isMatch = targets.some(target => node.data.name.toLowerCase().includes(target));
+                let hasMatchingDescendant = false;
+
+                const children = node.children || node._children;
+                if (children) {
+                    children.forEach(child => {
+                        if (searchTree(child)) {
+                            hasMatchingDescendant = true;
+                        }
+                    });
+                }
+
+                if (isMatch) node.isHighlighted = true;
+
+                if (hasMatchingDescendant || isMatch) {
+                    if (node._children) {
+                        node.children = node._children;
+                        node._children = null;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            searchTree(root);
+            update(root);
+        }
+        
+        // Setup Zoom and Panning
         const zoom = d3.zoom()
             .scaleExtent([0.1, 4])
             .on("zoom", (e) => g.attr("transform", e.transform));
@@ -238,45 +267,32 @@
 
         const tree = d3.tree().nodeSize([50, 450]);
         let root;
-        let originalNestedData;
-        
-        const initialScale = 0.85;
-        let startX, startY;
-
-        const nodeColors = {
-            "LEADERSHIP": "#ffd700",         // Gold
-            "REVOPS": "#2196f3",             // Deep Blue
-            "MARKETING": "#d500f9",          // Magenta
-            "SALES": "#00e676",              // Neon Green
-            "CUSTOMER SUCCESS": "#00bda5",   // Teal
-            "HUBSPOT CORE": "#ff7a59"        // HS Orange
-        };
+        let i = 0; 
 
         const vpMapping = {
             "LEADERSHIP": ["Executive Strategy"],
             "REVOPS": ["Data Governance", "Revenue Insights", "Portal Health & Security"],
             "MARKETING": ["Marketing Leadership", "Frontline Managers", "Marketing Ops", "Demand Gen", "Content Execution"],
             "SALES": ["Sales Leadership", "Frontline Managers", "Sales Ops", "Field Sales (Outside)", "Inside Sales (SDR/BDR)", "Enablement"],
-            "CUSTOMER SUCCESS": ["CS Leadership", "Frontline Managers", "Service Ops", "Agent Enablement", "Retention Strategy"]
+            "CUSTOMER SUCCESS": ["CS Leadership", "Frontline Managers", "Service Ops", "Agent Enablement", "Retention Strategy"],
+            "API": ["Authentication & Limits", "CRM APIs", "Automation & Webhooks", "CMS & Site APIs"]
         };
 
-        originalNestedData = { name: "HUBSPOT CORE", children: [] };
+        const nestedData = { name: "HUBSPOT CORE", children: [] };
         Object.keys(vpMapping).forEach(vp => {
             const vpNode = { name: vp, children: [] };
             vpMapping[vp].forEach(dir => {
-                const articles = data.filter(d => d.Parent === dir).map(d => ({ name: d.Name, url: d.URL, summary: d.Summary }));
+                const articles = data.filter(d => d.Parent === dir).map(d => ({ name: d.Name, url: d.URL }));
                 if (articles.length > 0) {
                     vpNode.children.push({ name: dir, children: articles });
                 }
             });
-            originalNestedData.children.push(vpNode);
+            nestedData.children.push(vpNode);
         });
 
-        resetMap();
-        
-        startX = wrapper.clientWidth * 0.15; 
-        startY = wrapper.clientHeight / 2;
-        svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+        root = d3.hierarchy(nestedData);
+        root.x0 = wrapper.clientHeight / 2; 
+        root.y0 = 0;
 
         function collapseDeep(d) {
             if (d.children) {
@@ -285,6 +301,18 @@
                 d.children = null;
             }
         }
+
+        if (root.children) {
+            root.children.forEach(collapseDeep);
+        }
+
+        update(root);
+        
+        // Dynamically calculate center based on wrapper dimensions
+        const initialScale = 0.85;
+        const startX = wrapper.clientWidth * 0.15; // Start 15% from left
+        const startY = wrapper.clientHeight / 2;
+        svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
 
         function toggle(d) {
             if (d.children) { 
@@ -305,47 +333,20 @@
 
         function update(source) {
             tree(root);
-            
-            root.each(d => {
-                if (d.depth === 0) d.data.color = nodeColors["HUBSPOT CORE"];
-                else if (d.depth === 1) d.data.color = nodeColors[d.data.name] || "var(--tr-teal)";
-                else d.data.color = d.parent.data.color;
-            });
-
             const nodes = root.descendants();
             const links = root.links();
 
-            const node = g.selectAll("g.node").data(nodes, d => d.data.name + "_" + d.depth);
+            const node = g.selectAll("g.node").data(nodes, d => d.id || (d.id = ++i));
             
             const nodeEnter = node.enter().append("g")
-                .attr("class", d => "node" + (!d.children && !d._children && d.data.url ? " node--leaf" : ""))
+                .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) { 
-                        var _hsq = window._hsq = window._hsq || [];
-                        _hsq.push(["trackEvent", { id: "Clicked MindMap Node", value: d.data.name }]);
                         window.open(d.data.url, "_blank"); 
                     } else if (d.children || d._children) { 
                         toggle(d); 
                         update(d); 
-                    }
-                })
-                .on("mouseover", function(e, d) {
-                    if (!d.children && !d._children) {
-                        d3.select(this).select("circle").style("filter", `drop-shadow(0 0 12px ${d.data.color})`);
-                        
-                        if (d.data.summary) {
-                            tooltip.transition().duration(200).style("opacity", 1);
-                            tooltip.html(`<strong>${d.data.name}</strong>${d.data.summary}`)
-                                .style("left", (e.pageX + 25) + "px")
-                                .style("top", (e.pageY - 40) + "px");
-                        }
-                    }
-                })
-                .on("mouseout", function(e, d) {
-                    if (!d.children && !d._children) {
-                        d3.select(this).select("circle").style("filter", null);
-                        if (d.data.summary) tooltip.transition().duration(300).style("opacity", 0);
                     }
                 });
 
@@ -366,10 +367,15 @@
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => d.data.color);
+                .style("stroke", d => d.isHighlighted ? "var(--tr-teal)" : null)
+                .style("fill", d => d.isHighlighted ? "var(--tr-teal)" : null)
+                .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
+                .style("fill", d => d.isHighlighted ? "#ffffff" : null)
+                .style("font-weight", d => d.isHighlighted ? "800" : null)
+                .style("text-shadow", d => d.isHighlighted ? "0 0 10px rgba(255,255,255,0.8)" : null)
                 .attr("x", d => d.children || d._children ? -18 : 18)
                 .attr("text-anchor", d => d.children || d._children ? "end" : "start");
             
@@ -381,7 +387,7 @@
             nodeExit.select("circle").attr("r", 1e-6);
             nodeExit.select("text").style("fill-opacity", 1e-6);
 
-            const link = g.selectAll("path.link").data(links, d => d.target.data.name + "_" + d.target.depth);
+            const link = g.selectAll("path.link").data(links, d => d.target.id);
             
             const linkEnter = link.enter().insert("path", "g")
                 .attr("class", "link")
@@ -391,8 +397,6 @@
             linkUpdate.transition()
                 .duration(600)
                 .attr("d", d => diagonal(d.source, d.target));
-            
-            linkUpdate.style("stroke", d => d.target.data.color).style("opacity", 0.4);
 
             link.exit().transition()
                 .duration(500)
@@ -401,117 +405,6 @@
 
             nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
-
-        function resetMap() {
-            root = d3.hierarchy(originalNestedData);
-            root.x0 = wrapper ? wrapper.clientHeight / 2 : 500; 
-            root.y0 = 0;
-            if (root.children) {
-                root.children.forEach(collapseDeep);
-            }
-            update(root);
-            
-            if (wrapper) {
-                svg.transition().duration(750)
-                   .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
-                
-                svg.selectAll("circle").style("filter", null).style("stroke-width", null);
-                svg.selectAll("text").style("fill", null).style("font-weight", null);
-                svg.selectAll("path.link").style("stroke-width", null).style("opacity", 0.4);
-            }
-        }
-
-        d3.select("#collapse-btn").on("click", function() {
-            document.getElementById("node-search").value = "";
-            resetMap();
-        });
-
-        d3.select("#node-search").on("input", function() {
-            const query = this.value.toLowerCase().trim();
-            
-            if (query === "") {
-                resetMap();
-                return;
-            }
-
-            svg.selectAll("circle").style("filter", null).style("stroke-width", null);
-            svg.selectAll("text").style("fill", null).style("font-weight", null);
-            svg.selectAll("path.link").style("stroke-width", null);
-
-            // GLOBAL SEMANTIC DICTIONARY MAPPER
-            let targetKeywords = [query];
-            if (typeof semanticDictionary !== 'undefined') {
-                for (const concept in semanticDictionary) {
-                    if (query.includes(concept) || concept.includes(query)) {
-                        targetKeywords = targetKeywords.concat(semanticDictionary[concept].map(k => k.toLowerCase()));
-                    }
-                }
-            }
-
-            function pruneTree(node) {
-                let isMatch = false;
-                
-                // Scan against ALL translated keywords (Summaries & Titles)
-                for (const keyword of targetKeywords) {
-                    if (node.name.toLowerCase().includes(keyword)) {
-                        isMatch = true; break;
-                    }
-                    if (node.summary && node.summary.toLowerCase().includes(keyword)) {
-                        isMatch = true; break;
-                    }
-                }
-                
-                let keptChildren = [];
-                if (node.children) {
-                    node.children.forEach(c => {
-                        const fc = pruneTree(c);
-                        if (fc) keptChildren.push(fc);
-                    });
-                }
-                
-                if (isMatch || keptChildren.length > 0) {
-                    return {
-                        name: node.name,
-                        url: node.url,
-                        summary: node.summary,
-                        children: keptChildren.length > 0 ? keptChildren : null
-                    };
-                }
-                return null;
-            }
-
-            const prunedData = pruneTree(originalNestedData);
-
-            if (prunedData) {
-                root = d3.hierarchy(prunedData);
-                root.x0 = wrapper.clientHeight / 2; 
-                root.y0 = 0;
-                update(root);
-
-                svg.selectAll("g.node")
-                    .select("circle")
-                    .style("stroke-width", "3px")
-                    .style("filter", d => `drop-shadow(0 0 10px ${d.data.color})`);
-                
-                svg.selectAll("g.node")
-                    .select("text")
-                    .style("fill", d => d.data.color)
-                    .style("font-weight", "800");
-
-                svg.selectAll("path.link")
-                    .style("stroke", d => d.target.data.color)
-                    .style("stroke-width", "2.5px")
-                    .style("opacity", 1); 
-
-            } else {
-                root = d3.hierarchy({name: "NO RESULTS FOUND", children: []});
-                update(root);
-            }
-        });
-        
-        d3.select("#node-search").on("keydown", function(e) {
-            if (e.key === "Enter" || e.keyCode === 13) e.preventDefault();
-        });
     }
 </script>
 </body>
