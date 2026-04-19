@@ -45,11 +45,12 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                     
                     results = data.get('results', [])[:6]
                     for i, r in enumerate(results):
-                        title = r.get('title', '').strip()
+                        import re
+                        title = re.sub(r'<[^>]+>', '', r.get('title', '')).replace('&quot;', '"').replace('&#39;', "'").strip()
                         url = r.get('url', '')
-                        summary = r.get('description', '').replace('"', "'").replace("\n", " ").strip()
+                        summary = re.sub(r'<[^>]+>', '', r.get('description', '')).replace('"', "'").replace("\n", " ").strip()
                         
-                        blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/']
+                        blocked_langs = ['/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/', '/th/', '/id/', '/vi/', '/ru/', '/tr/']
                         if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs):
                             writer.writerow([f"{topic_id}-{i+1}", title, director, url, summary])
                             total_mapped += 1
