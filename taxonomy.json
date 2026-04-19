@@ -1,23 +1,27 @@
 {
     "LEADERSHIP": {
-        "Executive Strategy": ["HubSpot reporting dashboards for executives", "calculating ROI", "Business Units overview"]
+        "Executive Strategy": ["HubSpot reporting dashboards for executives", "calculating ROI", "Business Units overview"],
+        "Department Heads": ["Cross-functional reporting", "Organizational permissions", "Strategic planning"]
     },
     "REVOPS": {
+        "RevOps Leadership": ["Revenue operations strategy", "Cross-department alignment", "RevOps dashboards"],
         "Data Governance": ["HubSpot properties guide", "Data quality command center", "custom objects", "data sync", "Lead routing and assignment"],
         "Revenue Insights": ["Custom report builder", "multi-touch revenue attribution", "forecasting tool", "goals tool"],
-        "Portal Health & Security": ["HubSpot audit log", "Property health tool", "API limits overview", "SSO setup", "2FA enforcement"]
+        "Portal Health & Security": ["HubSpot audit log", "Property health tool", "API limits overview", "SSO setup", "2FA enforcement"],
+        "CRM Administrators": ["User provisioning", "HubSpot account settings", "Permissions management", "User teams"]
     },
     "MARKETING": {
         "Marketing Leadership": ["Marketing analytics dashboards", "campaign ROI reporting", "lead source tracking"],
         "Frontline Managers": ["Campaign approval workflows", "marketing team productivity reporting", "user permissions"],
         "Marketing Ops": ["Marketing contacts billing", "GDPR compliance", "Preference centers", "Asset partitioning"],
-        "Demand Gen": ["Lead scoring", "Ads attribution", "Smart content", "Progressive profiling"],
-        "Content Execution": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager"]
+        "Demand Gen Specialists": ["Lead scoring", "Ads attribution", "Smart content", "Progressive profiling"],
+        "Content Creators & Copywriters": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager", "Blog publishing"]
     },
     "SALES": {
         "Sales Leadership": ["Advanced sales forecasting", "revenue goal tracking", "territory management"],
         "Frontline Managers": ["Coaching tools", "rep activity leaderboards", "deal pipeline reviews", "playbooks reporting"],
         "Sales Ops": ["Deal pipelines", "Weighted forecast", "Line items and products", "Quotes and CPQ", "Deal closed-won automation"],
+        "Account Executives (AEs)": ["Deal forecasting", "Creating quotes", "eSignature collection", "Meeting scheduling tool"],
         "Field Sales (Outside)": ["HubSpot mobile app features", "Scan business cards", "Logging mobile calls", "QR code business cards"],
         "Inside Sales (SDR/BDR)": ["Prospecting workspace", "Task queues", "Sequences", "LinkedIn Sales Navigator integration", "HubSpot calling tool"],
         "Enablement": ["Sales playbooks", "Sales templates snippets", "Meeting tool config"]
@@ -26,13 +30,16 @@
         "CS Leadership": ["Net Revenue Retention reporting", "total churn dashboards", "customer journey analytics"],
         "Frontline Managers": ["Ticket SLA reporting", "agent time-to-resolution", "rep scorecards"],
         "Service Ops": ["Help desk setup", "SLA management", "Ticket pipelines", "Customer portal", "Tiered SLA management"],
-        "Agent Enablement": ["Omnichannel inbox", "Chat snippets", "Knowledge base article insertion", "Mobile service app"],
-        "Retention Strategy": ["Customer health scoring", "Renewal workflows", "NPS CSAT surveys"]
+        "Customer Success Reps (CSMs)": ["Customer health scoring", "Renewal workflows", "NPS CSAT surveys", "Playbooks for renewals"],
+        "Support Agents": ["Omnichannel inbox", "Ticket routing", "Customer portal usage", "Help desk workspace"],
+        "Onboarding Specialists": ["Customer onboarding", "Projects tool", "Client implementation pipelines"],
+        "Agent Enablement": ["Chat snippets", "Knowledge base article insertion", "Mobile service app"]
     },
     "API": {
         "Authentication & Limits": ["OAuth setup", "Private Apps", "API rate limits"],
         "CRM APIs": ["Custom objects API", "Contacts API", "Company API"],
         "Automation & Webhooks": ["Webhooks API", "Serverless functions", "Workflows API"],
-        "CMS & Site APIs": ["HubDB API", "GraphQL API", "CMS Hub API"]
+        "CMS & Site APIs": ["HubDB API", "GraphQL API", "CMS Hub API"],
+        "Developers & Engineers": ["HubSpot CLI", "Local development integrations", "API logging"]
     }
 }
