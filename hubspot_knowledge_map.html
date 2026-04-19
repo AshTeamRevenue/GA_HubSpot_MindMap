@@ -205,8 +205,7 @@
 
         function handleSearch(query) {
             if (!query) {
-                root.descendants().forEach(d => d.isHighlighted = false);
-                update(root);
+                resetMap();
                 return;
             }
 
@@ -255,14 +254,18 @@
             .on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
         
-        // Color scale for branches
-        const colorScale = d3.scaleOrdinal([...d3.schemeSet2, ...d3.schemeCategory10]);
+        // Exact mapping for each branch to guarantee color cascading to article nodes
+        const vpColors = {
+            "LEADERSHIP": "#0A98FF", // Blue
+            "REVOPS": "#ff7a59",     // HubSpot Orange
+            "MARKETING": "#a6d854",  // Soft Green
+            "SALES": "#e78ac3",      // Purple
+            "CUSTOMER SUCCESS": "#ffd92f", // Yellow
+            "API": "#00bda5"         // Teal
+        };
 
         document.getElementById('collapse-btn').addEventListener('click', () => {
-            if (root.children) {
-                root.children.forEach(collapseDeep);
-            }
-            update(root);
+            resetMap();
         });
 
         const tree = d3.tree().nodeSize([50, 450]);
@@ -302,17 +305,27 @@
             }
         }
 
-        if (root.children) {
-            root.children.forEach(collapseDeep);
+        function resetMap(animate = true) {
+            if (root.children) {
+                root.children.forEach(collapseDeep);
+            }
+            root.descendants().forEach(d => d.isHighlighted = false);
+            update(root);
+            
+            const initialScale = 0.85;
+            const startX = wrapper.clientWidth * 0.15;
+            const startY = wrapper.clientHeight / 2;
+            
+            if (animate) {
+                svg.transition().duration(750)
+                   .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+            } else {
+                svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+            }
         }
 
-        update(root);
-        
-        // Dynamically calculate center based on wrapper dimensions
-        const initialScale = 0.85;
-        const startX = wrapper.clientWidth * 0.15; // Start 15% from left
-        const startY = wrapper.clientHeight / 2;
-        svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+        // Initialize state without animation
+        resetMap(false);
 
         function toggle(d) {
             if (d.children) { 
@@ -332,11 +345,17 @@
         }
 
         function getNodeColor(d) {
-            if (d.isHighlighted) return "var(--tr-teal)";
+            if (d.isHighlighted) return "white"; // Makes search results drastically pop
             if (d.depth === 0) return "var(--hs-orange)";
+            
+            // Ascend to the 1st-level parent branch to inherit its exact color
             let ancestor = d;
-            while(ancestor.depth > 1) ancestor = ancestor.parent;
-            return colorScale(ancestor.data.name);
+            while(ancestor.parent && ancestor.depth > 1) {
+                ancestor = ancestor.parent;
+            }
+            
+            const branchName = ancestor.data ? ancestor.data.name : null;
+            return vpColors[branchName] || "var(--tr-teal)";
         }
 
         function update(source) {
@@ -362,9 +381,10 @@
                     }
                 })
                 .on("mouseout", function(e, d) {
+                    const c = getNodeColor(d);
                     d3.select(this).select("circle")
-                        .style("fill", d.isHighlighted ? "var(--tr-teal)" : "var(--tr-dark-bg)")
-                        .style("filter", d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
+                        .style("fill", d.isHighlighted ? "white" : "var(--tr-dark-bg)")
+                        .style("filter", d.isHighlighted ? "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))" : null);
 
                     if (!d.children && !d._children) {
                         d3.select(this).select("text")
@@ -399,8 +419,8 @@
             nodeUpdate.select("circle")
                 .attr("r", 10)
                 .style("stroke", d => getNodeColor(d))
-                .style("fill", d => d.isHighlighted ? "var(--tr-teal)" : "var(--tr-dark-bg)")
-                .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
+                .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
+                .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))" : null);
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
