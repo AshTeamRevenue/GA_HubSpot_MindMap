@@ -88,13 +88,8 @@
         
         .node circle { 
             fill: var(--tr-dark-bg); 
-            stroke: var(--hs-orange); 
             stroke-width: 3px; 
             transition: all 0.4s ease;
-        }
-        .node circle:hover { 
-            fill: var(--hs-orange);
-            filter: drop-shadow(0 0 8px var(--hs-orange-glow));
         }
         
         .node text { 
@@ -113,18 +108,8 @@
             transition: all 0.2s ease;
         }
         
-        .node--leaf text:hover { 
-            fill: #ffffff; 
-            text-shadow: 0 0 8px rgba(255,255,255,0.4);
-        }
-        
         .node--leaf circle {
-            stroke: var(--tr-teal);
             stroke-width: 2.5px;
-        }
-        .node--leaf circle:hover {
-            fill: var(--tr-teal);
-            filter: drop-shadow(0 0 8px rgba(0, 189, 165, 0.6));
         }
 
         .link { 
@@ -346,6 +331,14 @@
                       ${s.y} ${s.x}`;
         }
 
+        function getNodeColor(d) {
+            if (d.isHighlighted) return "var(--tr-teal)";
+            if (d.depth === 0) return "var(--hs-orange)";
+            let ancestor = d;
+            while(ancestor.depth > 1) ancestor = ancestor.parent;
+            return colorScale(ancestor.data.name);
+        }
+
         function update(source) {
             tree(root);
             const nodes = root.descendants();
@@ -356,6 +349,29 @@
             const nodeEnter = node.enter().append("g")
                 .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
+                .on("mouseover", function(e, d) {
+                    const c = getNodeColor(d);
+                    d3.select(this).select("circle")
+                        .style("fill", c)
+                        .style("filter", `drop-shadow(0 0 8px ${c})`);
+                     
+                    if (!d.children && !d._children) {
+                        d3.select(this).select("text")
+                            .style("fill", "#ffffff")
+                            .style("text-shadow", "0 0 8px rgba(255,255,255,0.4)");
+                    }
+                })
+                .on("mouseout", function(e, d) {
+                    d3.select(this).select("circle")
+                        .style("fill", d.isHighlighted ? "var(--tr-teal)" : "var(--tr-dark-bg)")
+                        .style("filter", d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
+
+                    if (!d.children && !d._children) {
+                        d3.select(this).select("text")
+                            .style("fill", d.isHighlighted ? "#ffffff" : null)
+                            .style("text-shadow", d.isHighlighted ? "0 0 10px rgba(255,255,255,0.8)" : null);
+                    }
+                })
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) { 
                         window.open(d.data.url, "_blank"); 
@@ -382,17 +398,8 @@
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => {
-                    if (d.isHighlighted) return "var(--tr-teal)";
-                    if (!d.children && !d._children) return "var(--tr-teal)";
-                    if (d.depth === 0) return "var(--hs-orange)";
-                    
-                    // Distinct color based on the top-level parent (the VP category)
-                    let ancestor = d;
-                    while(ancestor.depth > 1) ancestor = ancestor.parent;
-                    return colorScale(ancestor.data.name);
-                })
-                .style("fill", d => d.isHighlighted ? "var(--tr-teal)" : null)
+                .style("stroke", d => getNodeColor(d))
+                .style("fill", d => d.isHighlighted ? "var(--tr-teal)" : "var(--tr-dark-bg)")
                 .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(0, 189, 165, 0.8))" : null);
 
             nodeUpdate.select("text")
