@@ -186,12 +186,12 @@
         const g = svg.append("g");
         const wrapper = document.getElementById('canvas-wrapper');
         
-        let semanticDict = {};
+        let semanticDict = (typeof semanticDictionary !== 'undefined') ? semanticDictionary : {};
         
         fetch('dictionary.json')
             .then(res => {
                 if (res.ok) return res.json();
-                return {};
+                return semanticDict;
             })
             .then(dict => {
                 semanticDict = dict;
@@ -306,13 +306,12 @@
         root.y0 = 0;
 
         function collapseDeep(d) {
-            const children = d.children || d._children;
-            if (children) {
-                children.forEach(collapseDeep);
-            }
             if (d.children) {
+                d.children.forEach(collapseDeep);
                 d._children = d.children;
                 d.children = null;
+            } else if (d._children) {
+                d._children.forEach(collapseDeep);
             }
         }
 
@@ -386,11 +385,10 @@
             let nodes = root.descendants();
             let links = root.links();
 
-            const query = searchInput.value.trim();
-            if (query) {
-                nodes = nodes.filter(d => d.isVisible || d.depth === 0);
-                const visibleIds = new Set(nodes.map(d => d.id));
-                links = links.filter(l => visibleIds.has(l.source.id) && visibleIds.has(l.target.id));
+            const searchActive = searchInput.value.trim() !== "";
+            if (searchActive) {
+                nodes = nodes.filter(d => d.isVisible || d === root);
+                links = links.filter(d => d.target.isVisible);
             }
 
             const node = g.selectAll("g.node").data(nodes, d => d.id || (d.id = ++i));
@@ -453,14 +451,14 @@
                 .style("stroke", d => getNodeColor(d))
                 .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
                 .style("filter", d => {
-                    if (d.isHighlighted) return "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))";
-                    if (d.isOnPath) return `drop-shadow(0 0 10px ${getCategoryColor(d)})`;
+                    if (d.isHighlighted) return "drop-shadow(0 0 15px rgba(255, 255, 255, 1.0))";
+                    if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
                     return null;
                 });
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
-                .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
+                .style("fill", d => d.isHighlighted ? "#ffffff" : (d.isOnPath ? "#e1e7f0" : null))
                 .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : null)
                 .style("text-shadow", d => {
                     if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
@@ -494,8 +492,8 @@
                     }
                     return "rgba(255,255,255,0.15)";
                 })
-                .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "4px" : "2px")
-                .style("stroke-opacity", d => d.target.isOnPath || d.target.isHighlighted ? "0.8" : "1");
+                .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "6px" : "2px")
+                .style("stroke-opacity", d => d.target.isOnPath || d.target.isHighlighted ? "0.9" : "0.3");
 
             link.exit().transition()
                 .duration(500)
