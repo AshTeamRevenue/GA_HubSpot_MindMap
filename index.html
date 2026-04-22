@@ -97,7 +97,7 @@
             font-size: 14px; 
             fill: #e1e7f0; 
             font-weight: 600; 
-            pointer-events: none; 
+            pointer-events: auto;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         
@@ -212,7 +212,12 @@
 
         function handleSearch(query) {
             if (!query) {
-                resetMap();
+                visitAll(root, d => {
+                    d.isHighlighted = false;
+                    d.isOnPath = false;
+                    d.isVisible = true;
+                });
+                update(root);
                 return;
             }
 
@@ -230,7 +235,10 @@
             });
 
             function searchTree(node) {
-                let isMatch = targets.some(target => node.data.name.toLowerCase().includes(target));
+                const name = (node.data.name || "").toLowerCase();
+                const summary = (node.data.summary || "").toLowerCase();
+
+                let isMatch = targets.some(target => name.includes(target) || summary.includes(target));
                 let hasMatchingDescendant = false;
 
                 const children = node.children || node._children;
@@ -253,6 +261,14 @@
             }
 
             searchTree(root);
+
+            // Guided Journey: Prune currently open but unrelated branches to keep focus without auto-expanding
+            visitAll(root, d => {
+                if (d.children && !d.isVisible && d !== root) {
+                    collapseDeep(d);
+                }
+            });
+
             update(root);
         }
         
@@ -273,6 +289,7 @@
         };
 
         document.getElementById('collapse-btn').addEventListener('click', () => {
+            searchInput.value = "";
             resetMap();
         });
 
@@ -293,7 +310,11 @@
         Object.keys(vpMapping).forEach(vp => {
             const vpNode = { name: vp, children: [] };
             vpMapping[vp].forEach(dir => {
-                const articles = data.filter(d => d.Parent === dir).map(d => ({ name: d.Name, url: d.URL }));
+                const articles = data.filter(d => d.Parent === dir).map(d => ({
+                    name: d.Name,
+                    url: d.URL,
+                    summary: d.Summary || ""
+                }));
                 if (articles.length > 0) {
                     vpNode.children.push({ name: dir, children: articles });
                 }
@@ -442,6 +463,8 @@
                 .style("fill-opacity", 1e-6);
 
             const nodeUpdate = nodeEnter.merge(node);
+            const searchActive = searchInput.value.trim() !== "";
+
             nodeUpdate.transition()
                 .duration(600)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
@@ -450,6 +473,8 @@
                 .attr("r", 10)
                 .style("stroke", d => getNodeColor(d))
                 .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
+                .style("stroke-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
+                .style("fill-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
                 .style("filter", d => {
                     if (d.isHighlighted) return "drop-shadow(0 0 15px rgba(255, 255, 255, 1.0))";
                     if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
@@ -457,9 +482,9 @@
                 });
 
             nodeUpdate.select("text")
-                .style("fill-opacity", 1)
-                .style("fill", d => d.isHighlighted ? "#ffffff" : (d.isOnPath ? "#e1e7f0" : null))
-                .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : null)
+                .style("fill-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
+                .style("fill", d => d.isHighlighted ? "#ffffff" : (d.isOnPath ? "#ffffff" : null))
+                .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : "600")
                 .style("text-shadow", d => {
                     if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
                     if (d.isOnPath) return `0 0 10px ${getCategoryColor(d)}`;
@@ -490,10 +515,13 @@
                     if (d.target.isOnPath || d.target.isHighlighted) {
                         return getCategoryColor(d.target);
                     }
-                    return "rgba(255,255,255,0.15)";
+                    return searchActive ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.15)";
                 })
                 .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "6px" : "2px")
-                .style("stroke-opacity", d => d.target.isOnPath || d.target.isHighlighted ? "0.9" : "0.3");
+                .style("stroke-opacity", d => {
+                    if (d.target.isOnPath || d.target.isHighlighted) return 1.0;
+                    return searchActive ? 0.1 : 0.3;
+                });
 
             link.exit().transition()
                 .duration(500)
@@ -513,7 +541,11 @@
                 const viewportWidth = wrapper.clientWidth;
                 const viewportHeight = wrapper.clientHeight;
 
-                const scale = Math.min(0.9, 0.9 / Math.max(treeWidth / viewportWidth, treeHeight / viewportHeight));
+                let scale = 0.8;
+                if (treeWidth > 0 && treeHeight > 0) {
+                    scale = Math.min(0.9, 0.9 / Math.max(treeWidth / viewportWidth, treeHeight / viewportHeight));
+                }
+
                 const translateX = (viewportWidth - treeWidth * scale) / 2 - xRange[0] * scale;
                 const translateY = (viewportHeight - treeHeight * scale) / 2 - yRange[0] * scale;
 
