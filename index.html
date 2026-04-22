@@ -204,6 +204,12 @@
             handleSearch(query);
         });
 
+        function visitAll(node, cb) {
+            cb(node);
+            const children = node.children || node._children;
+            if (children) children.forEach(c => visitAll(c, cb));
+        }
+
         function handleSearch(query) {
             if (!query) {
                 resetMap();
@@ -217,9 +223,10 @@
                 }
             }
 
-            root.descendants().forEach(d => {
+            visitAll(root, d => {
                 d.isHighlighted = false;
                 d.isOnPath = false;
+                d.isVisible = false;
             });
 
             function searchTree(node) {
@@ -238,7 +245,11 @@
                 if (isMatch) node.isHighlighted = true;
                 if (hasMatchingDescendant) node.isOnPath = true;
 
-                return hasMatchingDescendant || isMatch;
+                if (isMatch || hasMatchingDescendant) {
+                    node.isVisible = true;
+                    return true;
+                }
+                return false;
             }
 
             searchTree(root);
@@ -306,9 +317,10 @@
             if (root.children) {
                 root.children.forEach(collapseDeep);
             }
-            root.descendants().forEach(d => {
+            visitAll(root, d => {
                 d.isHighlighted = false;
                 d.isOnPath = false;
+                d.isVisible = true;
             });
             update(root);
             
@@ -332,6 +344,15 @@
                 d._children = d.children; 
                 d.children = null; 
             } else { 
+                // Accordion behavior: collapse siblings
+                if (d.parent && d.parent.children) {
+                    d.parent.children.forEach(sibling => {
+                        if (sibling !== d && sibling.children) {
+                            sibling._children = sibling.children;
+                            sibling.children = null;
+                        }
+                    });
+                }
                 d.children = d._children; 
                 d._children = null; 
             }
@@ -346,7 +367,6 @@
 
         function getNodeColor(d) {
             if (d.isHighlighted) return "white"; // Makes search results drastically pop
-            if (d.isOnPath) return "var(--tr-teal)"; // Paths to matches highlighted in teal
             if (d.depth === 0) return "var(--hs-orange)";
             
             // Ascend to the 1st-level parent branch to inherit its exact color
@@ -361,8 +381,15 @@
 
         function update(source) {
             tree(root);
-            const nodes = root.descendants();
-            const links = root.links();
+            let nodes = root.descendants();
+            let links = root.links();
+
+            const query = searchInput.value.trim();
+            if (query) {
+                nodes = nodes.filter(d => d.isVisible || d.depth === 0);
+                const visibleIds = new Set(nodes.map(d => d.id));
+                links = links.filter(l => visibleIds.has(l.source.id) && visibleIds.has(l.target.id));
+            }
 
             const node = g.selectAll("g.node").data(nodes, d => d.id || (d.id = ++i));
             
@@ -385,7 +412,7 @@
                     const c = getNodeColor(d);
                     const isSearchActive = d.isHighlighted || d.isOnPath;
                     d3.select(this).select("circle")
-                        .style("fill", d.isHighlighted ? "white" : (d.isOnPath ? "var(--tr-teal)" : "var(--tr-dark-bg)"))
+                        .style("fill", d.isHighlighted ? "white" : "var(--tr-dark-bg)")
                         .style("filter", isSearchActive ? `drop-shadow(0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : "var(--tr-teal)"})` : null);
 
                     if (!d.children && !d._children) {
@@ -421,7 +448,7 @@
             nodeUpdate.select("circle")
                 .attr("r", 10)
                 .style("stroke", d => getNodeColor(d))
-                .style("fill", d => d.isHighlighted ? "white" : (d.isOnPath ? "var(--tr-teal)" : "var(--tr-dark-bg)"))
+                .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
                 .style("filter", d => {
                     if (d.isHighlighted) return "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))";
                     if (d.isOnPath) return "drop-shadow(0 0 10px var(--tr-teal))";
@@ -468,6 +495,25 @@
                 .remove();
 
             nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+
+            // Auto-center the tree
+            if (nodes.length > 0) {
+                const xRange = d3.extent(nodes, d => d.y);
+                const yRange = d3.extent(nodes, d => d.x);
+
+                const treeWidth = xRange[1] - xRange[0];
+                const treeHeight = yRange[1] - yRange[0];
+
+                const viewportWidth = wrapper.clientWidth;
+                const viewportHeight = wrapper.clientHeight;
+
+                const scale = Math.min(0.9, 0.9 / Math.max(treeWidth / viewportWidth, treeHeight / viewportHeight));
+                const translateX = (viewportWidth - treeWidth * scale) / 2 - xRange[0] * scale;
+                const translateY = (viewportHeight - treeHeight * scale) / 2 - yRange[0] * scale;
+
+                svg.transition().duration(750)
+                   .call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+            }
         }
     }
 </script>
