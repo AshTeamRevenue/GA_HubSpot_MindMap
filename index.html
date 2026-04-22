@@ -210,15 +210,17 @@
                 return;
             }
 
-            let targets = [];
+            let targets = [query];
             for (let [key, arr] of Object.entries(semanticDict)) {
                 if (key.toLowerCase().includes(query)) {
                     targets = targets.concat(arr.map(t => t.toLowerCase()));
                 }
             }
-            if (targets.length === 0) targets.push(query);
 
-            root.descendants().forEach(d => d.isHighlighted = false);
+            root.descendants().forEach(d => {
+                d.isHighlighted = false;
+                d.isOnPath = false;
+            });
 
             function searchTree(node) {
                 let isMatch = targets.some(target => node.data.name.toLowerCase().includes(target));
@@ -234,15 +236,9 @@
                 }
 
                 if (isMatch) node.isHighlighted = true;
+                if (hasMatchingDescendant) node.isOnPath = true;
 
-                if (hasMatchingDescendant || isMatch) {
-                    if (node._children) {
-                        node.children = node._children;
-                        node._children = null;
-                    }
-                    return true;
-                }
-                return false;
+                return hasMatchingDescendant || isMatch;
             }
 
             searchTree(root);
@@ -310,7 +306,10 @@
             if (root.children) {
                 root.children.forEach(collapseDeep);
             }
-            root.descendants().forEach(d => d.isHighlighted = false);
+            root.descendants().forEach(d => {
+                d.isHighlighted = false;
+                d.isOnPath = false;
+            });
             update(root);
             
             const initialScale = 0.85;
@@ -347,6 +346,7 @@
 
         function getNodeColor(d) {
             if (d.isHighlighted) return "white"; // Makes search results drastically pop
+            if (d.isOnPath) return "var(--tr-teal)"; // Paths to matches highlighted in teal
             if (d.depth === 0) return "var(--hs-orange)";
             
             // Ascend to the 1st-level parent branch to inherit its exact color
@@ -383,14 +383,15 @@
                 })
                 .on("mouseout", function(e, d) {
                     const c = getNodeColor(d);
+                    const isSearchActive = d.isHighlighted || d.isOnPath;
                     d3.select(this).select("circle")
-                        .style("fill", d.isHighlighted ? "white" : "var(--tr-dark-bg)")
-                        .style("filter", d.isHighlighted ? "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))" : null);
+                        .style("fill", d.isHighlighted ? "white" : (d.isOnPath ? "var(--tr-teal)" : "var(--tr-dark-bg)"))
+                        .style("filter", isSearchActive ? `drop-shadow(0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : "var(--tr-teal)"})` : null);
 
                     if (!d.children && !d._children) {
                         d3.select(this).select("text")
-                            .style("fill", d.isHighlighted ? "#ffffff" : null)
-                            .style("text-shadow", d.isHighlighted ? "0 0 10px rgba(255,255,255,0.8)" : null);
+                            .style("fill", isSearchActive ? "#ffffff" : null)
+                            .style("text-shadow", isSearchActive ? `0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : "var(--tr-teal)"}` : null);
                     }
                 })
                 .on("click", (e, d) => {
@@ -420,14 +421,22 @@
             nodeUpdate.select("circle")
                 .attr("r", 10)
                 .style("stroke", d => getNodeColor(d))
-                .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
-                .style("filter", d => d.isHighlighted ? "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))" : null);
+                .style("fill", d => d.isHighlighted ? "white" : (d.isOnPath ? "var(--tr-teal)" : "var(--tr-dark-bg)"))
+                .style("filter", d => {
+                    if (d.isHighlighted) return "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))";
+                    if (d.isOnPath) return "drop-shadow(0 0 10px var(--tr-teal))";
+                    return null;
+                });
 
             nodeUpdate.select("text")
                 .style("fill-opacity", 1)
-                .style("fill", d => d.isHighlighted ? "#ffffff" : null)
-                .style("font-weight", d => d.isHighlighted ? "800" : null)
-                .style("text-shadow", d => d.isHighlighted ? "0 0 10px rgba(255,255,255,0.8)" : null)
+                .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
+                .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : null)
+                .style("text-shadow", d => {
+                    if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
+                    if (d.isOnPath) return "0 0 10px var(--tr-teal)";
+                    return null;
+                })
                 .attr("x", d => d.children || d._children ? -18 : 18)
                 .attr("text-anchor", d => d.children || d._children ? "end" : "start");
             
@@ -448,7 +457,10 @@
             const linkUpdate = linkEnter.merge(link);
             linkUpdate.transition()
                 .duration(600)
-                .attr("d", d => diagonal(d.source, d.target));
+                .attr("d", d => diagonal(d.source, d.target))
+                .style("stroke", d => d.target.isOnPath || d.target.isHighlighted ? "var(--tr-teal)" : "rgba(255,255,255,0.15)")
+                .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "4px" : "2px")
+                .style("stroke-opacity", d => d.target.isOnPath || d.target.isHighlighted ? "0.8" : "1");
 
             link.exit().transition()
                 .duration(500)
