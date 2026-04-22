@@ -306,9 +306,12 @@
         root.y0 = 0;
 
         function collapseDeep(d) {
+            const children = d.children || d._children;
+            if (children) {
+                children.forEach(collapseDeep);
+            }
             if (d.children) {
                 d._children = d.children;
-                d._children.forEach(collapseDeep);
                 d.children = null;
             }
         }
@@ -341,15 +344,13 @@
 
         function toggle(d) {
             if (d.children) { 
-                d._children = d.children; 
-                d.children = null; 
+                collapseDeep(d);
             } else { 
                 // Accordion behavior: collapse siblings
                 if (d.parent && d.parent.children) {
                     d.parent.children.forEach(sibling => {
                         if (sibling !== d && sibling.children) {
-                            sibling._children = sibling.children;
-                            sibling.children = null;
+                            collapseDeep(sibling);
                         }
                     });
                 }
@@ -365,18 +366,19 @@
                       ${s.y} ${s.x}`;
         }
 
-        function getNodeColor(d) {
-            if (d.isHighlighted) return "white"; // Makes search results drastically pop
+        function getCategoryColor(d) {
             if (d.depth === 0) return "var(--hs-orange)";
-            
-            // Ascend to the 1st-level parent branch to inherit its exact color
             let ancestor = d;
             while(ancestor.parent && ancestor.depth > 1) {
                 ancestor = ancestor.parent;
             }
-            
             const branchName = ancestor.data ? ancestor.data.name : null;
             return vpColors[branchName] || "var(--tr-teal)";
+        }
+
+        function getNodeColor(d) {
+            if (d.isHighlighted) return "white"; // Makes search results drastically pop
+            return getCategoryColor(d);
         }
 
         function update(source) {
@@ -411,14 +413,15 @@
                 .on("mouseout", function(e, d) {
                     const c = getNodeColor(d);
                     const isSearchActive = d.isHighlighted || d.isOnPath;
+                    const catColor = getCategoryColor(d);
                     d3.select(this).select("circle")
                         .style("fill", d.isHighlighted ? "white" : "var(--tr-dark-bg)")
-                        .style("filter", isSearchActive ? `drop-shadow(0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : "var(--tr-teal)"})` : null);
+                        .style("filter", isSearchActive ? `drop-shadow(0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : catColor})` : null);
 
                     if (!d.children && !d._children) {
                         d3.select(this).select("text")
                             .style("fill", isSearchActive ? "#ffffff" : null)
-                            .style("text-shadow", isSearchActive ? `0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : "var(--tr-teal)"}` : null);
+                            .style("text-shadow", isSearchActive ? `0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : catColor}` : null);
                     }
                 })
                 .on("click", (e, d) => {
@@ -451,7 +454,7 @@
                 .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
                 .style("filter", d => {
                     if (d.isHighlighted) return "drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))";
-                    if (d.isOnPath) return "drop-shadow(0 0 10px var(--tr-teal))";
+                    if (d.isOnPath) return `drop-shadow(0 0 10px ${getCategoryColor(d)})`;
                     return null;
                 });
 
@@ -461,7 +464,7 @@
                 .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : null)
                 .style("text-shadow", d => {
                     if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
-                    if (d.isOnPath) return "0 0 10px var(--tr-teal)";
+                    if (d.isOnPath) return `0 0 10px ${getCategoryColor(d)}`;
                     return null;
                 })
                 .attr("x", d => d.children || d._children ? -18 : 18)
@@ -485,7 +488,12 @@
             linkUpdate.transition()
                 .duration(600)
                 .attr("d", d => diagonal(d.source, d.target))
-                .style("stroke", d => d.target.isOnPath || d.target.isHighlighted ? "var(--tr-teal)" : "rgba(255,255,255,0.15)")
+                .style("stroke", d => {
+                    if (d.target.isOnPath || d.target.isHighlighted) {
+                        return getCategoryColor(d.target);
+                    }
+                    return "rgba(255,255,255,0.15)";
+                })
                 .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "4px" : "2px")
                 .style("stroke-opacity", d => d.target.isOnPath || d.target.isHighlighted ? "0.8" : "1");
 
