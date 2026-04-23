@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>TeamRevenue - HubSpot Growth Architecture</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <!-- Modern Tech Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -14,168 +13,99 @@
         :root { 
             --hs-orange: #ff7a59;
             --hs-orange-glow: rgba(255, 122, 89, 0.6);
-            --tr-dark-bg: #0b1320; /* Deep slate blue */
+            --tr-dark-bg: #0b1320;
             --tr-teal: #00bda5;
             --tr-glass: rgba(11, 19, 32, 0.45);
             --tr-glass-border: rgba(255, 255, 255, 0.1);
         }
-        
+
         * { box-sizing: border-box; }
-        
+
         body { 
             font-family: 'Inter', sans-serif;
-            margin: 0; 
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            width: 100vw; height: 100vh;
             overflow: hidden;
             background: radial-gradient(circle at 10% 20%, #15243b 0%, var(--tr-dark-bg) 90%);
             color: #ffffff;
         }
 
-        /* Frosted Glass Header */
         .glass-header {
-            width: 100%;
-            height: 70px;
-            display: flex;
-            align-items: center;
+            width: 100%; height: 70px;
+            display: flex; align-items: center;
             padding: 0 40px;
             background: var(--tr-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--tr-glass-border);
-            z-index: 10;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            z-index: 10; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .header-title {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
+            font-size: 22px; font-weight: 800; letter-spacing: 0.5px;
             background: linear-gradient(90deg, #ffffff, #a8b8d0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin: 0;
         }
-        
+
         .header-subtitle {
-            margin-left: 15px;
-            padding-left: 15px;
-            border-left: 1px solid rgba(255,255,255,0.2);
-            font-size: 14px;
-            font-weight: 400;
-            color: #8fa0ba;
-            letter-spacing: 1px;
+            margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);
+            font-size: 14px; font-weight: 400; color: #8fa0ba; letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        /* SVG Canvas */
-        #canvas-wrapper {
-            flex: 1; /* Takes remaining height dynamically */
-            width: 100%;
-            position: relative;
-        }
-
-        #canvas { 
-            width: 100%; 
-            height: 100%; 
-            cursor: grab; 
-        }
+        #canvas-wrapper { flex: 1; width: 100%; position: relative; }
+        #canvas { width: 100%; height: 100%; cursor: grab; }
         #canvas:active { cursor: grabbing; }
-        
+
         .node { cursor: pointer; }
-        
-        .node circle { 
-            fill: var(--tr-dark-bg); 
-            stroke-width: 3px; 
-            transition: all 0.4s ease;
-        }
-        
-        .node text { 
-            font-size: 14px; 
-            fill: #e1e7f0; 
-            font-weight: 600; 
-            pointer-events: auto;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-        
-        /* Styles for individual article nodes */
-        .node--leaf text { 
-            pointer-events: auto; 
-            font-weight: 400;
-            fill: #a2b2c9; 
-            transition: all 0.2s ease;
-        }
-        
-        .node--leaf circle {
-            stroke-width: 2.5px;
-        }
+        .node circle { fill: var(--tr-dark-bg); stroke-width: 3px; transition: all 0.4s ease; }
+        .node text { font-size: 14px; fill: #e1e7f0; font-weight: 600; pointer-events: auto; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .node--leaf text { pointer-events: auto; font-weight: 400; fill: #a2b2c9; transition: all 0.2s ease; }
+        .node--leaf circle { stroke-width: 2.5px; }
 
-        .link { 
-            fill: none; 
-            stroke: rgba(255,255,255,0.15); 
-            stroke-width: 2px; 
-            transition: stroke 0.3s ease;
-        }
-        
-        /* Search Bar */
-        .search-container {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-        }
+        .link { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 2px; transition: stroke 0.3s ease; }
 
+        .search-container { margin-left: auto; display: flex; align-items: center; }
         .search-input {
-            width: 280px;
-            padding: 10px 18px;
-            border-radius: 20px;
+            width: 280px; padding: 10px 18px; border-radius: 20px;
             border: 1px solid var(--tr-glass-border);
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05); color: #ffffff;
+            font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+            transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-
         .search-input:focus {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--tr-teal);
+            background: rgba(255, 255, 255, 0.1); border-color: var(--tr-teal);
             box-shadow: 0 0 10px rgba(0, 189, 165, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
-        .search-input::placeholder {
-            color: #8fa0ba;
+        .search-input::placeholder { color: #8fa0ba; }
+
+        .collapse-btn {
+            margin-left: 20px; padding: 8px 16px; border-radius: 20px;
+            background: rgba(255,255,255,0.1); color: #fff;
+            border: 1px solid var(--tr-glass-border);
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            font-weight: 600; transition: all 0.3s ease;
         }
+        .collapse-btn:hover { background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
-
-<!-- Premium Branding Header -->
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
     <span class="header-subtitle">HubSpot Knowledge Base Mapping</span>
-    
-    <button id="collapse-btn" style="margin-left: 20px; padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--tr-glass-border); font-family: 'Inter', sans-serif; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-        Collapse All
-    </button>
-
+    <button id="collapse-btn" class="collapse-btn">Collapse All</button>
     <div class="search-container">
         <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'churn')...">
     </div>
 </div>
-
-<div id="canvas-wrapper">
-    <svg id="canvas"></svg>
-</div>
+<div id="canvas-wrapper"><svg id="canvas"></svg></div>
 
 <script>
     if (typeof sheetData === 'undefined') {
-        alert("CRITICAL ERROR: 'data.js' is missing! Please ensure the Python script has generated the latest data wrapper.");
+        alert("CRITICAL ERROR: 'data.js' is missing!");
     } else {
+        // --- Initialization ---
         const rawData = d3.csvParse(sheetData.trim());
         const data = rawData.filter(d => d.Parent && d.Name).map(d => {
             d.Name = d.Name.replace(/<\/?[^>]+(>|$)/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
@@ -185,42 +115,54 @@
         const svg = d3.select("#canvas");
         const g = svg.append("g");
         const wrapper = document.getElementById('canvas-wrapper');
-        
         let semanticDict = (typeof semanticDictionary !== 'undefined') ? semanticDictionary : {};
-        
-        fetch('dictionary.json')
-            .then(res => {
-                if (res.ok) return res.json();
-                return semanticDict;
-            })
-            .then(dict => {
-                semanticDict = dict;
-            })
-            .catch(err => console.error("Error loading dictionary:", err));
-            
-        const searchInput = document.getElementById('semantic-search');
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            handleSearch(query);
-        });
 
+        const searchInput = document.getElementById('semantic-search');
+        searchInput.addEventListener('input', (e) => handleSearch(e.target.value.toLowerCase().trim()));
+
+        // --- Helper Functions ---
         function visitAll(node, cb) {
             cb(node);
             const children = node.children || node._children;
             if (children) children.forEach(c => visitAll(c, cb));
         }
 
+        let preSearchState = null;
+        function captureExpansionState() {
+            const state = new Set();
+            visitAll(root, d => {
+                if (d.children) state.add(d.data.id);
+            });
+            return state;
+        }
+
+        function restoreExpansionState(state) {
+            visitAll(root, d => {
+                if (state.has(d.data.id)) {
+                    if (d._children) { d.children = d._children; d._children = null; }
+                } else {
+                    if (d.children) { d._children = d.children; d.children = null; }
+                }
+            });
+        }
+
         function handleSearch(query) {
             if (!query) {
+                if (preSearchState) {
+                    restoreExpansionState(preSearchState);
+                    preSearchState = null;
+                }
                 visitAll(root, d => {
-                    d.isHighlighted = false;
-                    d.isOnPath = false;
+                    d.isHighlighted = d.isOnPath = false;
                     d.isVisible = true;
                 });
                 update(root);
                 return;
             }
 
+            if (!preSearchState) preSearchState = captureExpansionState();
+
+            // Synonym mapping
             let targets = [query];
             for (let [key, arr] of Object.entries(semanticDict)) {
                 if (key.toLowerCase().includes(query)) {
@@ -228,74 +170,67 @@
                 }
             }
 
-            visitAll(root, d => {
-                d.isHighlighted = false;
-                d.isOnPath = false;
-                d.isVisible = false;
-            });
-
             function searchTree(node) {
                 const name = (node.data.name || "").toLowerCase();
                 const summary = (node.data.summary || "").toLowerCase();
 
-                let isMatch = targets.some(target => name.includes(target) || summary.includes(target));
-                let hasMatchingDescendant = false;
+                node.isHighlighted = targets.some(t => name.includes(t) || (summary && summary.includes(t)));
+                node.isOnPath = false;
 
+                let hasMatch = false;
                 const children = node.children || node._children;
                 if (children) {
-                    children.forEach(child => {
-                        if (searchTree(child)) {
-                            hasMatchingDescendant = true;
-                        }
+                    children.forEach(c => {
+                        if (searchTree(c)) hasMatch = true;
                     });
                 }
 
-                if (isMatch) node.isHighlighted = true;
-                if (hasMatchingDescendant) node.isOnPath = true;
+                if (hasMatch) node.isOnPath = true;
+                node.isVisible = node.isHighlighted || node.isOnPath || node === root;
+                return node.isVisible;
+            }
 
-                if (isMatch || hasMatchingDescendant) {
-                    node.isVisible = true;
-                    return true;
-                }
-                return false;
+            // Ensure root is expanded to allow visibility tracking
+            if (root._children) {
+                root.children = root._children;
+                root._children = null;
             }
 
             searchTree(root);
 
-            // Guided Journey: Prune currently open but unrelated branches to keep focus without auto-expanding
+            // Collapse branches that are not on the search path
             visitAll(root, d => {
-                if (d.children && !d.isVisible && d !== root) {
-                    collapseDeep(d);
-                }
+                if (d.children && !d.isVisible && d !== root) collapseDeep(d);
             });
 
             update(root);
         }
-        
-        // Setup Zoom and Panning
+
+        // --- View & Controls ---
         const zoom = d3.zoom()
             .scaleExtent([0.1, 4])
             .on("zoom", (e) => g.attr("transform", e.transform));
-        svg.call(zoom);
         
-        // Exact mapping for each branch to guarantee color cascading to article nodes
+        svg.call(zoom);
+
         const vpColors = {
-            "LEADERSHIP": "#0A98FF", // Blue
-            "REVOPS": "#ff7a59",     // HubSpot Orange
-            "MARKETING": "#a6d854",  // Soft Green
-            "SALES": "#e78ac3",      // Purple
-            "CUSTOMER SUCCESS": "#ffd92f", // Yellow
-            "API": "#00bda5"         // Teal
+            "LEADERSHIP": "#0A98FF",
+            "REVOPS": "#ff7a59",
+            "MARKETING": "#a6d854",
+            "SALES": "#e78ac3",
+            "CUSTOMER SUCCESS": "#ffd92f",
+            "API": "#00bda5"
         };
 
         document.getElementById('collapse-btn').addEventListener('click', () => {
             searchInput.value = "";
+            preSearchState = null;
             resetMap();
         });
 
+        // --- Data Structuring ---
         const tree = d3.tree().nodeSize([50, 450]);
         let root;
-        let i = 0; 
 
         const vpMapping = {
             "LEADERSHIP": ["Executive Strategy", "Department Heads"],
@@ -306,17 +241,20 @@
             "API": ["Authentication & Limits", "CRM APIs", "Automation & Webhooks", "CMS & Site APIs", "Developers & Engineers"]
         };
 
-        const nestedData = { name: "HUBSPOT CORE", children: [] };
+        let nodeIdCounter = 0;
+        const nestedData = { name: "HUBSPOT CORE", id: ++nodeIdCounter, children: [] };
+
         Object.keys(vpMapping).forEach(vp => {
-            const vpNode = { name: vp, children: [] };
+            const vpNode = { name: vp, id: ++nodeIdCounter, children: [] };
             vpMapping[vp].forEach(dir => {
                 const articles = data.filter(d => d.Parent === dir).map(d => ({
                     name: d.Name,
                     url: d.URL,
-                    summary: d.Summary || ""
+                    summary: d.Summary || "",
+                    id: ++nodeIdCounter
                 }));
                 if (articles.length > 0) {
-                    vpNode.children.push({ name: dir, children: articles });
+                    vpNode.children.push({ name: dir, id: ++nodeIdCounter, children: articles });
                 }
             });
             nestedData.children.push(vpNode);
@@ -331,20 +269,21 @@
                 d.children.forEach(collapseDeep);
                 d._children = d.children;
                 d.children = null;
-            } else if (d._children) {
-                d._children.forEach(collapseDeep);
             }
         }
 
         function resetMap(animate = true) {
-            if (root.children) {
-                root.children.forEach(collapseDeep);
-            }
             visitAll(root, d => {
-                d.isHighlighted = false;
-                d.isOnPath = false;
+                d.isHighlighted = d.isOnPath = false;
                 d.isVisible = true;
+                if (d.children) { d._children = d.children; d.children = null; }
             });
+
+            if (root._children) {
+                root.children = root._children;
+                root._children = null;
+            }
+
             update(root);
             
             const initialScale = 0.85;
@@ -359,101 +298,77 @@
             }
         }
 
-        // Initialize state without animation
         resetMap(false);
 
         function toggle(d) {
             if (d.children) { 
-                collapseDeep(d);
-            } else { 
-                // Accordion behavior: collapse siblings
+                if (d === root) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    collapseDeep(d);
+                }
+            } else {
+                // Accordion behavior: close siblings
                 if (d.parent && d.parent.children) {
-                    d.parent.children.forEach(sibling => {
-                        if (sibling !== d && sibling.children) {
-                            collapseDeep(sibling);
-                        }
+                    d.parent.children.forEach(s => {
+                        if (s !== d && s.children) collapseDeep(s);
                     });
                 }
-                d.children = d._children; 
-                d._children = null; 
+                d.children = d._children;
+                d._children = null;
             }
         }
 
         function diagonal(s, d) {
-            return `M ${d.y} ${d.x}
-                    C ${(s.y + d.y) / 2} ${d.x},
-                      ${(s.y + d.y) / 2} ${s.x},
-                      ${s.y} ${s.x}`;
+            return `M ${d.y} ${d.x} C ${(s.y + d.y) / 2} ${d.x}, ${(s.y + d.y) / 2} ${s.x}, ${s.y} ${s.x}`;
         }
 
         function getCategoryColor(d) {
             if (d.depth === 0) return "var(--hs-orange)";
-            let ancestor = d;
-            while(ancestor.parent && ancestor.depth > 1) {
-                ancestor = ancestor.parent;
-            }
-            const branchName = ancestor.data ? ancestor.data.name : null;
-            return vpColors[branchName] || "var(--tr-teal)";
+            let anc = d;
+            while(anc.parent && anc.depth > 1) anc = anc.parent;
+            return vpColors[anc.data.name] || "var(--tr-teal)";
         }
 
-        function getNodeColor(d) {
-            if (d.isHighlighted) return "white"; // Makes search results drastically pop
-            return getCategoryColor(d);
-        }
-
+        // --- Core Render Loop ---
         function update(source) {
             tree(root);
             let nodes = root.descendants();
             let links = root.links();
-
             const searchActive = searchInput.value.trim() !== "";
+
             if (searchActive) {
-                nodes = nodes.filter(d => d.isVisible || d === root);
-                links = links.filter(d => d.target.isVisible);
+                nodes = nodes.filter(d => {
+                    if (d === root) return true;
+                    if (!d.isVisible) return false;
+                    // Only show if all ancestors are expanded
+                    let anc = d.parent;
+                    while (anc) {
+                        if (!anc.children) return false;
+                        anc = anc.parent;
+                    }
+                    return true;
+                });
+                links = links.filter(l => nodes.includes(l.source) && nodes.includes(l.target));
             }
 
-            const node = g.selectAll("g.node").data(nodes, d => d.id || (d.id = ++i));
+            // Nodes
+            const node = g.selectAll("g.node").data(nodes, d => d.data.id);
             
             const nodeEnter = node.enter().append("g")
                 .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
-                .on("mouseover", function(e, d) {
-                    const c = getNodeColor(d);
-                    d3.select(this).select("circle")
-                        .style("fill", c)
-                        .style("filter", `drop-shadow(0 0 8px ${c})`);
-                     
-                    if (!d.children && !d._children) {
-                        d3.select(this).select("text")
-                            .style("fill", "#ffffff")
-                            .style("text-shadow", "0 0 8px rgba(255,255,255,0.4)");
-                    }
-                })
-                .on("mouseout", function(e, d) {
-                    const c = getNodeColor(d);
-                    const isSearchActive = d.isHighlighted || d.isOnPath;
-                    const catColor = getCategoryColor(d);
-                    d3.select(this).select("circle")
-                        .style("fill", d.isHighlighted ? "white" : "var(--tr-dark-bg)")
-                        .style("filter", isSearchActive ? `drop-shadow(0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : catColor})` : null);
-
-                    if (!d.children && !d._children) {
-                        d3.select(this).select("text")
-                            .style("fill", isSearchActive ? "#ffffff" : null)
-                            .style("text-shadow", isSearchActive ? `0 0 10px ${d.isHighlighted ? "rgba(255, 255, 255, 0.8)" : catColor}` : null);
-                    }
-                })
                 .on("click", (e, d) => {
-                    if (!d.children && !d._children && d.data.url) { 
-                        window.open(d.data.url, "_blank"); 
-                    } else if (d.children || d._children) { 
-                        toggle(d); 
-                        update(d); 
+                    if (!d.children && !d._children && d.data.url) {
+                        window.open(d.data.url, "_blank");
+                    } else {
+                        toggle(d);
+                        update(d);
                     }
                 });
 
-            nodeEnter.append("circle")
-                .attr("r", 1e-6);
+            nodeEnter.append("circle").attr("r", 1e-6);
 
             nodeEnter.append("text")
                 .attr("dy", ".35em")
@@ -463,18 +378,14 @@
                 .style("fill-opacity", 1e-6);
 
             const nodeUpdate = nodeEnter.merge(node);
-            const searchActive = searchInput.value.trim() !== "";
 
-            nodeUpdate.transition()
-                .duration(600)
+            nodeUpdate.transition().duration(600)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => getNodeColor(d))
+                .style("stroke", d => d.isHighlighted ? "white" : getCategoryColor(d))
                 .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
-                .style("stroke-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
-                .style("fill-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
                 .style("filter", d => {
                     if (d.isHighlighted) return "drop-shadow(0 0 15px rgba(255, 255, 255, 1.0))";
                     if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
@@ -482,75 +393,55 @@
                 });
 
             nodeUpdate.select("text")
-                .style("fill-opacity", d => (searchActive && !d.isVisible) ? 0.2 : 1)
-                .style("fill", d => d.isHighlighted ? "#ffffff" : (d.isOnPath ? "#ffffff" : null))
+                .style("fill-opacity", 1)
+                .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
                 .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : "600")
                 .style("text-shadow", d => {
                     if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
                     if (d.isOnPath) return `0 0 10px ${getCategoryColor(d)}`;
                     return null;
-                })
-                .attr("x", d => d.children || d._children ? -18 : 18)
-                .attr("text-anchor", d => d.children || d._children ? "end" : "start");
-            
-            const nodeExit = node.exit().transition()
-                .duration(500)
+                });
+
+            node.exit().transition().duration(500)
                 .attr("transform", d => `translate(${source.y},${source.x})`)
                 .remove();
 
-            nodeExit.select("circle").attr("r", 1e-6);
-            nodeExit.select("text").style("fill-opacity", 1e-6);
-
-            const link = g.selectAll("path.link").data(links, d => d.target.id);
+            // Links
+            const link = g.selectAll("path.link").data(links, l => l.target.data.id);
             
             const linkEnter = link.enter().insert("path", "g")
                 .attr("class", "link")
                 .attr("d", d => diagonal({x: source.x0, y: source.y0}, {x: source.x0, y: source.y0}));
 
             const linkUpdate = linkEnter.merge(link);
-            linkUpdate.transition()
-                .duration(600)
-                .attr("d", d => diagonal(d.source, d.target))
-                .style("stroke", d => {
-                    if (d.target.isOnPath || d.target.isHighlighted) {
-                        return getCategoryColor(d.target);
-                    }
-                    return searchActive ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.15)";
-                })
-                .style("stroke-width", d => d.target.isOnPath || d.target.isHighlighted ? "6px" : "2px")
-                .style("stroke-opacity", d => {
-                    if (d.target.isOnPath || d.target.isHighlighted) return 1.0;
-                    return searchActive ? 0.1 : 0.3;
-                });
 
-            link.exit().transition()
-                .duration(500)
+            linkUpdate.transition().duration(600)
+                .attr("d", d => diagonal(d.source, d.target))
+                .style("stroke", d => (d.target.isOnPath || d.target.isHighlighted) ? getCategoryColor(d.target) : "rgba(255,255,255,0.15)")
+                .style("stroke-width", d => (d.target.isOnPath || d.target.isHighlighted) ? "6px" : "2px")
+                .style("stroke-opacity", d => (d.target.isOnPath || d.target.isHighlighted) ? 1.0 : 0.3);
+
+            link.exit().transition().duration(500)
                 .attr("d", d => diagonal({x: source.x, y: source.y}, {x: source.x, y: source.y}))
                 .remove();
 
             nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
 
-            // Auto-center the tree
+            // Auto-center and zoom
             if (nodes.length > 0) {
-                const xRange = d3.extent(nodes, d => d.y);
-                const yRange = d3.extent(nodes, d => d.x);
+                const xr = d3.extent(nodes, d => d.y);
+                const yr = d3.extent(nodes, d => d.x);
+                const tw = xr[1] - xr[0];
+                const th = yr[1] - yr[0];
+                const vw = wrapper.clientWidth;
+                const vh = wrapper.clientHeight;
 
-                const treeWidth = xRange[1] - xRange[0];
-                const treeHeight = yRange[1] - yRange[0];
-
-                const viewportWidth = wrapper.clientWidth;
-                const viewportHeight = wrapper.clientHeight;
-
-                let scale = 0.8;
-                if (treeWidth > 0 && treeHeight > 0) {
-                    scale = Math.min(0.9, 0.9 / Math.max(treeWidth / viewportWidth, treeHeight / viewportHeight));
-                }
-
-                const translateX = (viewportWidth - treeWidth * scale) / 2 - xRange[0] * scale;
-                const translateY = (viewportHeight - treeHeight * scale) / 2 - yRange[0] * scale;
+                let s = Math.min(0.9, 0.9 / Math.max(tw / vw, th / vh));
+                const tx = (vw - tw * s) / 2 - xr[0] * s;
+                const ty = (vh - th * s) / 2 - yr[0] * s;
 
                 svg.transition().duration(750)
-                   .call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+                   .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(s));
             }
         }
     }
