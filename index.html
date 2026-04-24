@@ -151,19 +151,21 @@
             const counter = document.getElementById('match-counter');
             if (!query) {
                 counter.innerText = "";
-                if (preSearchState) {
-                    restoreExpansionState(preSearchState);
-                    preSearchState = null;
-                }
                 visitAll(root, d => {
                     d.isHighlighted = d.isOnPath = false;
                     d.isVisible = true;
                 });
+                if (preSearchState) {
+                    restoreExpansionState(preSearchState);
+                    preSearchState = null;
+                }
                 update(root);
                 return;
             }
 
-            if (!preSearchState) preSearchState = captureExpansionState();
+            if (!preSearchState) {
+                preSearchState = captureExpansionState();
+            }
 
             const terms = query.split(/\s+/).filter(t => t.length > 2);
             let targets = [query];
@@ -195,18 +197,8 @@
                 return node.isVisible;
             }
 
-            if (root._children) {
-                root.children = root._children;
-                root._children = null;
-            }
-
             searchTree(root);
             counter.innerText = matchCount > 0 ? `${matchCount} FOUND` : "NO MATCHES";
-
-            // Collapse branches that are not on the search path
-            visitAll(root, d => {
-                if (d.children && !d.isVisible && d !== root) collapseDeep(d);
-            });
 
             update(root);
         }
@@ -338,10 +330,37 @@
 
         // --- Core Render Loop ---
         function update(source) {
-            tree(root);
+            const searchActive = searchInput.value.trim() !== "";
+
+            if (searchActive) {
+                // To eliminate "giant gaps" from non-visible siblings during search,
+                // we temporarily prune non-visible branches for the layout engine.
+                const originalStructure = new Map();
+                visitAll(root, d => {
+                    originalStructure.set(d.data.id, {
+                        children: d.children,
+                        _children: d._children
+                    });
+                    if (d.children) {
+                        d.children = d.children.filter(c => c.isVisible);
+                        if (d.children.length === 0) d.children = null;
+                    }
+                });
+
+                tree(root);
+
+                // Restore full structure immediately after layout calculation
+                visitAll(root, d => {
+                    const orig = originalStructure.get(d.data.id);
+                    d.children = orig.children;
+                    d._children = orig._children;
+                });
+            } else {
+                tree(root);
+            }
+
             let nodes = root.descendants();
             let links = root.links();
-            const searchActive = searchInput.value.trim() !== "";
 
             if (searchActive) {
                 nodes = nodes.filter(d => {
