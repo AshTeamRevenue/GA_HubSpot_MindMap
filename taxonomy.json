@@ -13,7 +13,7 @@
     "MARKETING": {
         "Marketing Leadership": ["Marketing analytics dashboards", "campaign ROI reporting", "lead source tracking"],
         "Frontline Managers": ["Campaign approval workflows", "marketing team productivity reporting", "user permissions"],
-        "Marketing Ops": ["Marketing contacts billing", "GDPR compliance", "Preference centers", "Asset partitioning"],
+        "Marketing Ops": ["HubSpot tracking code", "Troubleshoot tracking code", "Site tracking", "Marketing contacts billing", "GDPR compliance", "Preference centers", "Asset partitioning"],
         "Demand Gen Specialists": ["Lead scoring", "Ads attribution", "Smart content", "Progressive profiling"],
         "Content Creators & Copywriters": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager", "Blog publishing"]
     },

@@ -96,7 +96,8 @@
     <span class="header-subtitle">HubSpot Knowledge Base Mapping</span>
     <button id="collapse-btn" class="collapse-btn">Collapse All</button>
     <div class="search-container">
-        <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'churn')...">
+        <span id="match-counter" style="margin-right: 15px; font-size: 12px; font-weight: 800; color: var(--tr-teal);"></span>
+        <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'tracking')...">
     </div>
 </div>
 <div id="canvas-wrapper"><svg id="canvas"></svg></div>
@@ -147,7 +148,9 @@
         }
 
         function handleSearch(query) {
+            const counter = document.getElementById('match-counter');
             if (!query) {
+                counter.innerText = "";
                 if (preSearchState) {
                     restoreExpansionState(preSearchState);
                     preSearchState = null;
@@ -162,41 +165,43 @@
 
             if (!preSearchState) preSearchState = captureExpansionState();
 
-            // Synonym mapping
+            const terms = query.split(/\s+/).filter(t => t.length > 2);
             let targets = [query];
             for (let [key, arr] of Object.entries(semanticDict)) {
-                if (key.toLowerCase().includes(query)) {
+                if (key.toLowerCase().includes(query) || terms.some(t => key.toLowerCase().includes(t))) {
                     targets = targets.concat(arr.map(t => t.toLowerCase()));
                 }
             }
 
+            let matchCount = 0;
             function searchTree(node) {
                 const name = (node.data.name || "").toLowerCase();
                 const summary = (node.data.summary || "").toLowerCase();
 
                 node.isHighlighted = targets.some(t => name.includes(t) || (summary && summary.includes(t)));
-                node.isOnPath = false;
+                if (node.isHighlighted && !node.children && !node._children) matchCount++;
 
-                let hasMatch = false;
+                node.isOnPath = false;
+                let hasChildMatch = false;
                 const children = node.children || node._children;
                 if (children) {
                     children.forEach(c => {
-                        if (searchTree(c)) hasMatch = true;
+                        if (searchTree(c)) hasChildMatch = true;
                     });
                 }
 
-                if (hasMatch) node.isOnPath = true;
+                if (hasChildMatch) node.isOnPath = true;
                 node.isVisible = node.isHighlighted || node.isOnPath || node === root;
                 return node.isVisible;
             }
 
-            // Ensure root is expanded to allow visibility tracking
             if (root._children) {
                 root.children = root._children;
                 root._children = null;
             }
 
             searchTree(root);
+            counter.innerText = matchCount > 0 ? `${matchCount} FOUND` : "NO MATCHES";
 
             // Collapse branches that are not on the search path
             visitAll(root, d => {

@@ -44,5 +44,13 @@
         "Chat snippets",
         "Omnichannel inbox",
         "Lead routing and assignment"
+    ],
+    "tracking": [
+        "HubSpot tracking code",
+        "Troubleshoot tracking code",
+        "Site tracking",
+        "analytics",
+        "pixel",
+        "cookies"
     ]
 }
