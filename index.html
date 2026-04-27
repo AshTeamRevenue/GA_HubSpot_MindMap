@@ -286,13 +286,49 @@
         "Pipelines": "Manage stage-based processes for sales, service, and implementation work.",
         "Business Structure": "Organize HubSpot around brands, teams, units, and operating boundaries.",
         "Data & Governance": "Keep HubSpot clean, secure, permissioned, and ready for reliable reporting.",
+        "Properties & Data Quality": "Define fields, monitor data health, and keep CRM records trustworthy.",
+        "Users, Teams & Permissions": "Control access, teams, seats, sharing, and user-level settings.",
+        "Security & Compliance": "Protect the portal with audit, authentication, privacy, and compliance controls.",
+        "Portal Architecture": "Structure account-level settings, assets, brands, and marketing contact rules.",
         "Lead Capture": "Capture demand through tracking, forms, pages, chat, email, and campaign assets.",
+        "Tracking & Source Capture": "Install tracking and understand where contacts and conversions come from.",
+        "Conversion Tools": "Build forms, CTAs, meetings, chat, and pages that convert visitors.",
+        "Email Marketing": "Create, send, test, and analyze marketing email performance.",
+        "Campaign Conversion": "Plan campaigns and measure influenced contacts, conversions, and ROI.",
+        "Content & Campaign Assets": "Manage social, blog, assets, smart content, and campaign materials.",
         "Segmentation & Qualification": "Group, score, route, and qualify contacts for the right next action.",
+        "Lists & Audiences": "Build segments and audiences for targeting, reporting, and automation.",
+        "Scoring": "Prioritize contacts and accounts using fit, intent, behavior, and health signals.",
+        "Lifecycle Qualification": "Move contacts through qualification stages and handoffs.",
+        "Routing & Assignment": "Send leads, tickets, and records to the right owner or team.",
+        "Prospecting": "Use prospecting tools and integrations to identify and work target accounts.",
         "Sales Execution": "Run pipeline work, quotes, sales activities, commerce, and rep enablement.",
+        "Pipeline Execution": "Create, review, and manage deals as they move through the sales pipeline.",
+        "Commerce": "Manage quotes, payments, invoices, subscriptions, and revenue transactions.",
+        "Sales Activities": "Use tasks, sequences, calls, and reminders to keep selling work moving.",
+        "Mobile Selling": "Operate sales workflows from the HubSpot mobile app while in the field.",
+        "Sales Enablement": "Equip reps with playbooks, templates, snippets, coaching, and meeting tools.",
         "Automation": "Build workflows that route work, update data, notify teams, and scale process.",
+        "Workflow Fundamentals": "Learn enrollment, testing, suppression, re-enrollment, and troubleshooting basics.",
+        "Workflow Logic": "Use branches, delays, goals, triggers, and unenrollment rules.",
+        "Workflow Actions": "Configure workflow steps that create work, update data, and notify teams.",
+        "Workflow Automation": "Automate real operating motions like approvals, renewals, and closed-won handoffs.",
+        "Service Automation": "Automate support routing, inbox channels, and service follow-up work.",
         "Customer Experience": "Operate support, help desk, customer portal, feedback, and success motions.",
+        "Service Operations": "Set up help desk processes, routing, SLAs, and service queues.",
+        "Support Experience": "Manage inbox, tickets, portal, knowledge base, chat, and support channels.",
+        "Customer Success": "Run onboarding, projects, surveys, and customer feedback loops.",
         "Reporting": "Measure performance across marketing, sales, service, revenue, and operations.",
-        "Integrations & APIs": "Connect HubSpot with other systems using sync tools, private apps, and APIs."
+        "Dashboards": "Create, manage, share, and review dashboards for key teams.",
+        "Revenue Reporting": "Measure attribution, ROI, retention, churn, and revenue outcomes.",
+        "Forecasting & Goals": "Track forecasts, goals, quota progress, and sales performance.",
+        "Operational Reporting": "Build reports for productivity, service, campaigns, journeys, and team performance.",
+        "Integrations & APIs": "Connect HubSpot with other systems using sync tools, private apps, and APIs.",
+        "Authentication & Access": "Manage app access, private apps, OAuth, limits, and secure connections.",
+        "CRM APIs": "Understand API-based access to CRM records, objects, and associations.",
+        "Automation APIs": "Use developer tools that support automation, workflows, and data operations.",
+        "CMS & Data APIs": "Work with CMS, HubDB, GraphQL, and structured website data.",
+        "Developer Tools & Integrations": "Use sync, CLI, logging, and integration tooling for connected systems."
     };
 
     if (typeof sheetData === 'undefined') {
@@ -580,9 +616,6 @@
             const nodeEnter = node.enter().append("g")
                 .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
-                .on("mouseenter", showNodeTooltip)
-                .on("mousemove", moveNodeTooltip)
-                .on("mouseleave", hideNodeTooltip)
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) {
                         window.open(d.data.url, "_blank");
@@ -602,6 +635,11 @@
                 .style("fill-opacity", 1e-6);
 
             const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate
+                .on("mouseover", showNodeTooltip)
+                .on("mousemove", moveNodeTooltip)
+                .on("mouseout", hideNodeTooltip);
 
             nodeUpdate.transition().duration(600)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
