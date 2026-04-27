@@ -43,14 +43,13 @@
 
         .header-title {
             font-size: 22px; font-weight: 800; letter-spacing: 0.5px;
-            background: linear-gradient(90deg, #ffffff, #a8b8d0);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            color: #ffffff;
             margin: 0;
         }
 
         .header-subtitle {
             margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);
-            font-size: 14px; font-weight: 400; color: #8fa0ba; letter-spacing: 1px;
+            font-size: 14px; font-weight: 400; color: rgba(255, 122, 89, 0.88); letter-spacing: 1px;
             text-transform: uppercase;
         }
 
@@ -89,13 +88,14 @@
         }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
         .contact-btn {
-            background: linear-gradient(135deg, var(--hs-orange), #ff9a7f);
+            background-color: #ff7a59;
             border-color: rgba(255, 122, 89, 0.85);
-            box-shadow: 0 0 18px rgba(255, 122, 89, 0.25);
+            box-shadow: 0 4px 14px rgba(255, 122, 89, 0.25);
+            transition: all 0.2s ease;
         }
         .contact-btn:hover {
-            background: linear-gradient(135deg, #ff8f73, var(--hs-orange));
-            box-shadow: 0 0 22px rgba(255, 122, 89, 0.4);
+            background-color: #ff8f73;
+            box-shadow: 0 4px 14px rgba(255, 122, 89, 0.25);
         }
 
         .modal-overlay {
