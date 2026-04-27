@@ -576,8 +576,22 @@
             nodeTooltip.style.top = `${event.clientY + 14}px`;
         }
 
+        function summarizeTooltipText(text) {
+            if (!text) return "";
+            const cleaned = text
+                .replace(/\s+/g, " ")
+                .replace(/^Summary\s*/i, "")
+                .trim();
+            if (cleaned.length <= 180) return cleaned;
+            return `${cleaned.slice(0, 177).trim()}...`;
+        }
+
+        function getNodeDescription(d) {
+            return nodeDescriptions[d.data.name] || summarizeTooltipText(d.data.summary);
+        }
+
         function showNodeTooltip(event, d) {
-            const description = nodeDescriptions[d.data.name];
+            const description = getNodeDescription(d);
             if (!description) return;
             nodeTooltip.textContent = description;
             nodeTooltip.style.display = "block";
