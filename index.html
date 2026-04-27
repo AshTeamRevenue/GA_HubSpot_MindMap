@@ -153,6 +153,22 @@
         .form-status { min-height: 20px; margin: 0; font-size: 13px; color: #9fb0c8; }
         .form-status.success { color: var(--tr-teal); }
         .form-status.error { color: #ff9a7f; }
+
+        .node-tooltip {
+            position: fixed;
+            display: none;
+            max-width: 280px;
+            padding: 10px 12px;
+            border: 1px solid var(--tr-glass-border);
+            border-radius: 6px;
+            background: rgba(11, 19, 32, 0.96);
+            color: #e1e7f0;
+            font-size: 13px;
+            line-height: 1.4;
+            pointer-events: none;
+            z-index: 200;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        }
     </style>
 </head>
 <body>
@@ -167,6 +183,7 @@
     </div>
 </div>
 <div id="canvas-wrapper"><svg id="canvas"></svg></div>
+<div id="node-tooltip" class="node-tooltip"></div>
 
 <div id="contact-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
     <div class="contact-modal">
@@ -257,6 +274,27 @@
         }
     });
 
+    const nodeDescriptions = {
+        "HubSpot Core": "Start here for the main operating map across HubSpot tools and workflows.",
+        "HUBSPOT CORE": "Start here for the main operating map across HubSpot tools and workflows.",
+        "Core CRM": "Learn the records, relationships, and pipelines that anchor HubSpot operations.",
+        "Standard Objects": "Understand contacts, companies, deals, tickets, products, and line items.",
+        "Custom Objects": "Model business-specific data that does not fit standard HubSpot records.",
+        "Lifecycle & Stages": "Track where people, deals, and tickets sit in your operating process.",
+        "Activities & Engagements": "Log calls, emails, meetings, tasks, and notes against CRM records.",
+        "Associations": "Connect related records so teams can see the full customer context.",
+        "Pipelines": "Manage stage-based processes for sales, service, and implementation work.",
+        "Business Structure": "Organize HubSpot around brands, teams, units, and operating boundaries.",
+        "Data & Governance": "Keep HubSpot clean, secure, permissioned, and ready for reliable reporting.",
+        "Lead Capture": "Capture demand through tracking, forms, pages, chat, email, and campaign assets.",
+        "Segmentation & Qualification": "Group, score, route, and qualify contacts for the right next action.",
+        "Sales Execution": "Run pipeline work, quotes, sales activities, commerce, and rep enablement.",
+        "Automation": "Build workflows that route work, update data, notify teams, and scale process.",
+        "Customer Experience": "Operate support, help desk, customer portal, feedback, and success motions.",
+        "Reporting": "Measure performance across marketing, sales, service, revenue, and operations.",
+        "Integrations & APIs": "Connect HubSpot with other systems using sync tools, private apps, and APIs."
+    };
+
     if (typeof sheetData === 'undefined') {
         alert("CRITICAL ERROR: 'data.js' is missing!");
     } else {
@@ -270,6 +308,7 @@
         const svg = d3.select("#canvas");
         const g = svg.append("g");
         const wrapper = document.getElementById('canvas-wrapper');
+        const nodeTooltip = document.getElementById('node-tooltip');
         let semanticDict = (typeof semanticDictionary !== 'undefined') ? semanticDictionary : {};
 
         const searchInput = document.getElementById('semantic-search');
@@ -496,6 +535,23 @@
             return vpColors[anc.data.name] || "var(--tr-teal)";
         }
 
+        function moveNodeTooltip(event) {
+            nodeTooltip.style.left = `${event.clientX + 14}px`;
+            nodeTooltip.style.top = `${event.clientY + 14}px`;
+        }
+
+        function showNodeTooltip(event, d) {
+            const description = nodeDescriptions[d.data.name];
+            if (!description) return;
+            nodeTooltip.textContent = description;
+            nodeTooltip.style.display = "block";
+            moveNodeTooltip(event);
+        }
+
+        function hideNodeTooltip() {
+            nodeTooltip.style.display = "none";
+        }
+
         // --- Core Render Loop ---
         function update(source) {
             tree(root);
@@ -524,6 +580,9 @@
             const nodeEnter = node.enter().append("g")
                 .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
+                .on("mouseenter", showNodeTooltip)
+                .on("mousemove", moveNodeTooltip)
+                .on("mouseleave", hideNodeTooltip)
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) {
                         window.open(d.data.url, "_blank");
