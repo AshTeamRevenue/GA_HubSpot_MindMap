@@ -1,0 +1,56 @@
+{
+    "forecast": [
+        "mobile app", 
+        "deal pipelines", 
+        "sales forecasting", 
+        "dashboards",
+        "roi"
+    ],
+    "coaching": [
+        "scorecards", 
+        "playbooks", 
+        "leaderboards",
+        "reporting"
+    ],
+    "churn": [
+        "health scoring", 
+        "ticket SLA", 
+        "retention reporting"
+    ],
+    "integrations": [
+        "Private Apps",
+        "Webhooks API",
+        "data sync",
+        "Serverless functions"
+    ],
+    "closed": [
+        "Deal pipelines",
+        "Ticket pipelines",
+        "revenue goal tracking",
+        "campaign ROI reporting",
+        "multi-touch revenue attribution",
+        "Deal closed-won automation"
+    ],
+    "tier": [
+        "Lead scoring",
+        "Customer health scoring",
+        "Ticket SLA reporting",
+        "territory management",
+        "Tiered SLA management"
+    ],
+    "routing": [
+        "Lead scoring",
+        "territory management",
+        "Chat snippets",
+        "Omnichannel inbox",
+        "Lead routing and assignment"
+    ],
+    "tracking": [
+        "HubSpot tracking code",
+        "Troubleshoot tracking code",
+        "Site tracking",
+        "analytics",
+        "pixel",
+        "cookies"
+    ]
+}

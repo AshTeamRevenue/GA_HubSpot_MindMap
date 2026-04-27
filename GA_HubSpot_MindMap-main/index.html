@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TeamRevenue - HubSpot Growth Architecture</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="data.js"></script>
+    <style>
+        :root { 
+            --hs-orange: #ff7a59;
+            --hs-orange-glow: rgba(255, 122, 89, 0.6);
+            --tr-dark-bg: #0b1320;
+            --tr-teal: #00bda5;
+            --tr-glass: rgba(11, 19, 32, 0.45);
+            --tr-glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 10% 20%, #15243b 0%, var(--tr-dark-bg) 90%);
+            color: #ffffff;
+        }
+
+        .glass-header {
+            width: 100%; height: 70px;
+            display: flex; align-items: center;
+            padding: 0 40px;
+            background: var(--tr-glass);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--tr-glass-border);
+            z-index: 10; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-title {
+            font-size: 22px; font-weight: 800; letter-spacing: 0.5px;
+            background: linear-gradient(90deg, #ffffff, #a8b8d0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);
+            font-size: 14px; font-weight: 400; color: #8fa0ba; letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #canvas-wrapper { flex: 1; width: 100%; position: relative; }
+        #canvas { width: 100%; height: 100%; cursor: grab; }
+        #canvas:active { cursor: grabbing; }
+
+        .node { cursor: pointer; }
+        .node circle { fill: var(--tr-dark-bg); stroke-width: 3px; transition: all 0.4s ease; }
+        .node text { font-size: 14px; fill: #e1e7f0; font-weight: 600; pointer-events: auto; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .node--leaf text { pointer-events: auto; font-weight: 400; fill: #a2b2c9; transition: all 0.2s ease; }
+        .node--leaf circle { stroke-width: 2.5px; }
+
+        .link { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 2px; transition: stroke 0.3s ease; }
+
+        .search-container { margin-left: auto; display: flex; align-items: center; }
+        .search-input {
+            width: 280px; padding: 10px 18px; border-radius: 20px;
+            border: 1px solid var(--tr-glass-border);
+            background: rgba(255, 255, 255, 0.05); color: #ffffff;
+            font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+            transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.1); border-color: var(--tr-teal);
+            box-shadow: 0 0 10px rgba(0, 189, 165, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .search-input::placeholder { color: #8fa0ba; }
+
+        .nav-btn {
+            margin-left: 20px; padding: 8px 16px; border-radius: 20px;
+            background: rgba(255,255,255,0.1); color: #fff;
+            border: 1px solid var(--tr-glass-border);
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            font-weight: 600; transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.2); }
+        .contact-btn {
+            background: linear-gradient(135deg, var(--hs-orange), #ff9a7f);
+            border-color: rgba(255, 122, 89, 0.85);
+            box-shadow: 0 0 18px rgba(255, 122, 89, 0.25);
+        }
+        .contact-btn:hover {
+            background: linear-gradient(135deg, #ff8f73, var(--hs-orange));
+            box-shadow: 0 0 22px rgba(255, 122, 89, 0.4);
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            padding: 24px;
+            background: rgba(5, 10, 18, 0.72);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        .modal-overlay.is-open { display: flex; }
+        .contact-modal {
+            width: min(460px, 100%);
+            padding: 28px;
+            border: 1px solid var(--tr-glass-border);
+            border-radius: 8px;
+            background: rgba(11, 19, 32, 0.96);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), 0 0 32px rgba(0, 189, 165, 0.12);
+        }
+        .modal-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 20px; margin-bottom: 22px;
+        }
+        .modal-title { margin: 0; font-size: 24px; font-weight: 800; }
+        .modal-subtitle { margin: 6px 0 0; color: #9fb0c8; font-size: 14px; line-height: 1.5; }
+        .modal-close {
+            width: 34px; height: 34px; flex: 0 0 34px;
+            border-radius: 50%; border: 1px solid var(--tr-glass-border);
+            background: rgba(255,255,255,0.06); color: #fff;
+            cursor: pointer; font-size: 22px; line-height: 1;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.14); }
+        .contact-form { display: grid; gap: 16px; }
+        .form-row { display: grid; gap: 8px; }
+        .form-row label { color: #dce6f5; font-size: 13px; font-weight: 600; }
+        .form-row input {
+            width: 100%; padding: 12px 14px; border-radius: 6px;
+            border: 1px solid var(--tr-glass-border);
+            background: rgba(255,255,255,0.06); color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 15px; outline: none;
+        }
+        .form-row input:focus {
+            border-color: var(--tr-teal);
+            box-shadow: 0 0 0 3px rgba(0, 189, 165, 0.18);
+        }
+        .submit-btn {
+            margin-top: 6px; padding: 12px 18px; border-radius: 6px;
+            border: 1px solid rgba(0, 189, 165, 0.8);
+            background: var(--tr-teal); color: #06111d;
+            font-family: 'Inter', sans-serif; font-weight: 800;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .submit-btn:hover { filter: brightness(1.1); }
+        .submit-btn:disabled { cursor: wait; opacity: 0.7; }
+        .form-status { min-height: 20px; margin: 0; font-size: 13px; color: #9fb0c8; }
+        .form-status.success { color: var(--tr-teal); }
+        .form-status.error { color: #ff9a7f; }
+    </style>
+</head>
+<body>
+<div class="glass-header">
+    <h1 class="header-title">TeamRevenue</h1>
+    <span class="header-subtitle">HubSpot Knowledge Base Mapping</span>
+    <button id="collapse-btn" class="nav-btn">Collapse All</button>
+    <button id="contact-btn" class="nav-btn contact-btn" type="button">Contact TeamRevenue</button>
+    <div class="search-container">
+        <span id="match-counter" style="margin-right: 15px; font-size: 12px; font-weight: 800; color: var(--tr-teal);"></span>
+        <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'tracking')...">
+    </div>
+</div>
+<div id="canvas-wrapper"><svg id="canvas"></svg></div>
+
+<div id="contact-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+    <div class="contact-modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="contact-modal-title" class="modal-title">Contact TeamRevenue</h2>
+                <p class="modal-subtitle">Tell us where to reach you and we will follow up shortly.</p>
+            </div>
+            <button id="contact-modal-close" class="modal-close" type="button" aria-label="Close contact form">&times;</button>
+        </div>
+        <form id="contact-form" class="contact-form" action="https://formspree.io/f/mbdqvdoo" method="POST">
+            <div class="form-row">
+                <label for="first-name">First name</label>
+                <input id="first-name" name="first_name" type="text" autocomplete="given-name" required>
+            </div>
+            <div class="form-row">
+                <label for="last-name">Last name</label>
+                <input id="last-name" name="last_name" type="text" autocomplete="family-name" required>
+            </div>
+            <div class="form-row">
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email" autocomplete="email" required>
+            </div>
+            <div class="form-row">
+                <label for="phone">Phone number</label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel">
+            </div>
+            <button id="contact-submit" class="submit-btn" type="submit">Send Message</button>
+            <p id="contact-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    const contactButton = document.getElementById('contact-btn');
+    const contactModal = document.getElementById('contact-modal');
+    const contactCloseButton = document.getElementById('contact-modal-close');
+    const contactForm = document.getElementById('contact-form');
+    const contactSubmit = document.getElementById('contact-submit');
+    const contactStatus = document.getElementById('contact-status');
+
+    function openContactModal() {
+        contactModal.classList.add('is-open');
+        contactStatus.textContent = "";
+        contactStatus.className = "form-status";
+        document.getElementById('first-name').focus();
+    }
+
+    function closeContactModal() {
+        contactModal.classList.remove('is-open');
+        contactSubmit.disabled = false;
+        contactSubmit.textContent = "Send Message";
+    }
+
+    contactButton.addEventListener('click', openContactModal);
+    contactCloseButton.addEventListener('click', closeContactModal);
+    contactModal.addEventListener('click', (event) => {
+        if (event.target === contactModal) closeContactModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && contactModal.classList.contains('is-open')) closeContactModal();
+    });
+    contactForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        contactSubmit.disabled = true;
+        contactSubmit.textContent = "Sending...";
+        contactStatus.textContent = "";
+        contactStatus.className = "form-status";
+
+        try {
+            const response = await fetch(contactForm.action, {
+                method: "POST",
+                body: new FormData(contactForm),
+                headers: { "Accept": "application/json" }
+            });
+
+            if (!response.ok) throw new Error("Unable to submit contact form.");
+
+            contactForm.reset();
+            contactStatus.textContent = "Thanks, we\u2019ll be in touch.";
+            contactStatus.classList.add('success');
+            setTimeout(closeContactModal, 1400);
+        } catch (error) {
+            contactStatus.textContent = "Something went wrong. Please try again.";
+            contactStatus.classList.add('error');
+            contactSubmit.disabled = false;
+            contactSubmit.textContent = "Send Message";
+        }
+    });
+
+    if (typeof sheetData === 'undefined') {
+        alert("CRITICAL ERROR: 'data.js' is missing!");
+    } else {
+        // --- Initialization ---
+        const rawData = d3.csvParse(sheetData.trim());
+        const data = rawData.filter(d => d.Parent && d.Name).map(d => {
+            d.Name = d.Name.replace(/<\/?[^>]+(>|$)/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+            return d;
+        });
+
+        const svg = d3.select("#canvas");
+        const g = svg.append("g");
+        const wrapper = document.getElementById('canvas-wrapper');
+        let semanticDict = (typeof semanticDictionary !== 'undefined') ? semanticDictionary : {};
+
+        const searchInput = document.getElementById('semantic-search');
+        searchInput.addEventListener('input', (e) => handleSearch(e.target.value.toLowerCase().trim()));
+
+        // --- Helper Functions ---
+        function visitAll(node, cb) {
+            cb(node);
+            const children = node.children || node._children;
+            if (children) children.forEach(c => visitAll(c, cb));
+        }
+
+        let preSearchState = null;
+        function captureExpansionState() {
+            const state = new Set();
+            visitAll(root, d => {
+                if (d.children) state.add(d.data.id);
+            });
+            return state;
+        }
+
+        function restoreExpansionState(state) {
+            visitAll(root, d => {
+                if (state.has(d.data.id)) {
+                    if (d._children) { d.children = d._children; d._children = null; }
+                } else {
+                    if (d.children) { d._children = d.children; d.children = null; }
+                }
+            });
+        }
+
+        function handleSearch(query) {
+            const counter = document.getElementById('match-counter');
+            if (!query) {
+                counter.innerText = "";
+                if (preSearchState) {
+                    restoreExpansionState(preSearchState);
+                    preSearchState = null;
+                }
+                visitAll(root, d => {
+                    d.isHighlighted = d.isOnPath = false;
+                    d.isVisible = true;
+                });
+                update(root);
+                return;
+            }
+
+            if (!preSearchState) preSearchState = captureExpansionState();
+
+            const terms = query.split(/\s+/).filter(t => t.length > 2);
+            let targets = [query];
+            for (let [key, arr] of Object.entries(semanticDict)) {
+                if (key.toLowerCase().includes(query) || terms.some(t => key.toLowerCase().includes(t))) {
+                    targets = targets.concat(arr.map(t => t.toLowerCase()));
+                }
+            }
+
+            let matchCount = 0;
+            function searchTree(node) {
+                const name = (node.data.name || "").toLowerCase();
+                const summary = (node.data.summary || "").toLowerCase();
+
+                node.isHighlighted = targets.some(t => name.includes(t) || (summary && summary.includes(t)));
+                if (node.isHighlighted && !node.children && !node._children) matchCount++;
+
+                node.isOnPath = false;
+                let hasChildMatch = false;
+                const children = node.children || node._children;
+                if (children) {
+                    children.forEach(c => {
+                        if (searchTree(c)) hasChildMatch = true;
+                    });
+                }
+
+                if (hasChildMatch) node.isOnPath = true;
+                node.isVisible = node.isHighlighted || node.isOnPath || node === root;
+                return node.isVisible;
+            }
+
+            if (root._children) {
+                root.children = root._children;
+                root._children = null;
+            }
+
+            searchTree(root);
+            counter.innerText = matchCount > 0 ? `${matchCount} FOUND` : "NO MATCHES";
+
+            // Collapse branches that are not on the search path
+            visitAll(root, d => {
+                if (d.children && !d.isVisible && d !== root) collapseDeep(d);
+            });
+
+            update(root);
+        }
+
+        // --- View & Controls ---
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on("zoom", (e) => g.attr("transform", e.transform));
+        
+        svg.call(zoom);
+
+        const vpColors = {
+            "Core CRM": "#0A98FF",
+            "Data & Governance": "#ff7a59",
+            "Lead Capture": "#a6d854",
+            "Segmentation & Qualification": "#e78ac3",
+            "Sales Execution": "#ffd92f",
+            "Automation": "#00bda5",
+            "Customer Experience": "#8da0cb",
+            "Reporting": "#fc8d62",
+            "Integrations & APIs": "#66c2a5"
+        };
+
+        document.getElementById('collapse-btn').addEventListener('click', () => {
+            searchInput.value = "";
+            preSearchState = null;
+            resetMap();
+        });
+
+        // --- Data Structuring ---
+        const tree = d3.tree().nodeSize([50, 450]);
+        let root;
+
+        const vpMapping = {
+            "Core CRM": ["Standard Objects", "Custom Objects", "Lifecycle & Stages", "Activities & Engagements", "Associations", "Pipelines", "Business Structure"],
+            "Data & Governance": ["Properties & Data Quality", "Users, Teams & Permissions", "Security & Compliance", "Portal Architecture"],
+            "Lead Capture": ["Tracking & Source Capture", "Conversion Tools", "Email Marketing", "Campaign Conversion", "Content & Campaign Assets"],
+            "Segmentation & Qualification": ["Lists & Audiences", "Scoring", "Lifecycle Qualification", "Routing & Assignment", "Prospecting"],
+            "Sales Execution": ["Pipeline Execution", "Commerce", "Sales Activities", "Mobile Selling", "Sales Enablement"],
+            "Automation": ["Workflow Fundamentals", "Workflow Logic", "Workflow Actions", "Workflow Automation", "Service Automation"],
+            "Customer Experience": ["Service Operations", "Support Experience", "Customer Success"],
+            "Reporting": ["Dashboards", "Revenue Reporting", "Forecasting & Goals", "Operational Reporting"],
+            "Integrations & APIs": ["Authentication & Access", "CRM APIs", "Automation APIs", "CMS & Data APIs", "Developer Tools & Integrations"]
+        };
+
+        let nodeIdCounter = 0;
+        const nestedData = { name: "HUBSPOT CORE", id: ++nodeIdCounter, children: [] };
+
+        Object.keys(vpMapping).forEach(vp => {
+            const vpNode = { name: vp, id: ++nodeIdCounter, children: [] };
+            vpMapping[vp].forEach(dir => {
+                const articles = data.filter(d => d.Parent === dir).map(d => ({
+                    name: d.Name,
+                    url: d.URL,
+                    summary: d.Summary || "",
+                    id: ++nodeIdCounter
+                }));
+                if (articles.length > 0) {
+                    vpNode.children.push({ name: dir, id: ++nodeIdCounter, children: articles });
+                }
+            });
+            nestedData.children.push(vpNode);
+        });
+
+        root = d3.hierarchy(nestedData);
+        root.x0 = wrapper.clientHeight / 2; 
+        root.y0 = 0;
+
+        function collapseDeep(d) {
+            if (d.children) {
+                d.children.forEach(collapseDeep);
+                d._children = d.children;
+                d.children = null;
+            }
+        }
+
+        function resetMap(animate = true) {
+            visitAll(root, d => {
+                d.isHighlighted = d.isOnPath = false;
+                d.isVisible = true;
+                if (d.children) { d._children = d.children; d.children = null; }
+            });
+
+            if (root._children) {
+                root.children = root._children;
+                root._children = null;
+            }
+
+            update(root);
+            
+            const initialScale = 0.85;
+            const startX = wrapper.clientWidth * 0.15;
+            const startY = wrapper.clientHeight / 2;
+            
+            if (animate) {
+                svg.transition().duration(750)
+                   .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+            } else {
+                svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
+            }
+        }
+
+        resetMap(false);
+
+        function toggle(d) {
+            if (d.children) { 
+                if (d === root) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    collapseDeep(d);
+                }
+            } else {
+                // Accordion behavior: close siblings
+                if (d.parent && d.parent.children) {
+                    d.parent.children.forEach(s => {
+                        if (s !== d && s.children) collapseDeep(s);
+                    });
+                }
+                d.children = d._children;
+                d._children = null;
+            }
+        }
+
+        function diagonal(s, d) {
+            return `M ${d.y} ${d.x} C ${(s.y + d.y) / 2} ${d.x}, ${(s.y + d.y) / 2} ${s.x}, ${s.y} ${s.x}`;
+        }
+
+        function getCategoryColor(d) {
+            if (d.depth === 0) return "var(--hs-orange)";
+            let anc = d;
+            while(anc.parent && anc.depth > 1) anc = anc.parent;
+            return vpColors[anc.data.name] || "var(--tr-teal)";
+        }
+
+        // --- Core Render Loop ---
+        function update(source) {
+            tree(root);
+            let nodes = root.descendants();
+            let links = root.links();
+            const searchActive = searchInput.value.trim() !== "";
+
+            if (searchActive) {
+                nodes = nodes.filter(d => {
+                    if (d === root) return true;
+                    if (!d.isVisible) return false;
+                    // Only show if all ancestors are expanded
+                    let anc = d.parent;
+                    while (anc) {
+                        if (!anc.children) return false;
+                        anc = anc.parent;
+                    }
+                    return true;
+                });
+                links = links.filter(l => nodes.includes(l.source) && nodes.includes(l.target));
+            }
+
+            // Nodes
+            const node = g.selectAll("g.node").data(nodes, d => d.data.id);
+            
+            const nodeEnter = node.enter().append("g")
+                .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
+                .attr("transform", d => `translate(${source.y0},${source.x0})`)
+                .on("click", (e, d) => {
+                    if (!d.children && !d._children && d.data.url) {
+                        window.open(d.data.url, "_blank");
+                    } else {
+                        toggle(d);
+                        update(d);
+                    }
+                });
+
+            nodeEnter.append("circle").attr("r", 1e-6);
+
+            nodeEnter.append("text")
+                .attr("dy", ".35em")
+                .attr("x", d => d.children || d._children ? -18 : 18)
+                .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+                .text(d => d.data.name)
+                .style("fill-opacity", 1e-6);
+
+            const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate.transition().duration(600)
+                .attr("transform", d => `translate(${d.y},${d.x})`);
+
+            nodeUpdate.select("circle")
+                .attr("r", 10)
+                .style("stroke", d => d.isHighlighted ? "white" : getCategoryColor(d))
+                .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
+                .style("filter", d => {
+                    if (d.isHighlighted) return "drop-shadow(0 0 15px rgba(255, 255, 255, 1.0))";
+                    if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
+                    return null;
+                });
+
+            nodeUpdate.select("text")
+                .style("fill-opacity", 1)
+                .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
+                .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : "600")
+                .style("text-shadow", d => {
+                    if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
+                    if (d.isOnPath) return `0 0 10px ${getCategoryColor(d)}`;
+                    return null;
+                });
+
+            node.exit().transition().duration(500)
+                .attr("transform", d => `translate(${source.y},${source.x})`)
+                .remove();
+
+            // Links
+            const link = g.selectAll("path.link").data(links, l => l.target.data.id);
+            
+            const linkEnter = link.enter().insert("path", "g")
+                .attr("class", "link")
+                .attr("d", d => diagonal({x: source.x0, y: source.y0}, {x: source.x0, y: source.y0}));
+
+            const linkUpdate = linkEnter.merge(link);
+
+            linkUpdate.transition().duration(600)
+                .attr("d", d => diagonal(d.source, d.target))
+                .style("stroke", d => (d.target.isOnPath || d.target.isHighlighted) ? getCategoryColor(d.target) : "rgba(255,255,255,0.15)")
+                .style("stroke-width", d => (d.target.isOnPath || d.target.isHighlighted) ? "6px" : "2px")
+                .style("stroke-opacity", d => (d.target.isOnPath || d.target.isHighlighted) ? 1.0 : 0.3);
+
+            link.exit().transition().duration(500)
+                .attr("d", d => diagonal({x: source.x, y: source.y}, {x: source.x, y: source.y}))
+                .remove();
+
+            nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+
+            // Auto-center and zoom
+            if (nodes.length > 0) {
+                const xr = d3.extent(nodes, d => d.y);
+                const yr = d3.extent(nodes, d => d.x);
+                const tw = xr[1] - xr[0];
+                const th = yr[1] - yr[0];
+                const vw = wrapper.clientWidth;
+                const vh = wrapper.clientHeight;
+
+                let s = Math.min(0.9, 0.9 / Math.max(tw / vw, th / vh));
+                const tx = (vw - tw * s) / 2 - xr[0] * s;
+                const ty = (vh - th * s) / 2 - yr[0] * s;
+
+                svg.transition().duration(750)
+                   .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(s));
+            }
+        }
+    }
+</script>
+</body>
+</html>

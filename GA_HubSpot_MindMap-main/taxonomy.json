@@ -1,0 +1,63 @@
+{
+    "Core CRM": {
+        "Standard Objects": ["Contacts", "Companies", "Deals", "Tickets", "Products", "Line items and products", "Product library"],
+        "Custom Objects": ["custom objects"],
+        "Lifecycle & Stages": ["Lifecycle stages", "Deal stages", "Ticket stages"],
+        "Activities & Engagements": ["Calls", "Emails", "Meetings", "Tasks", "Notes"],
+        "Associations": ["CRM associations", "Record associations"],
+        "Pipelines": ["Deal pipelines", "Ticket pipelines", "Client implementation pipelines"],
+        "Business Structure": ["Business Units overview"]
+    },
+    "Data & Governance": {
+        "Properties & Data Quality": ["HubSpot properties guide", "Data quality command center", "Property health tool"],
+        "Users, Teams & Permissions": ["Organizational permissions", "user permissions", "Permissions management", "User provisioning", "User teams", "HubSpot account settings"],
+        "Security & Compliance": ["HubSpot audit log", "SSO setup", "2FA enforcement", "GDPR compliance"],
+        "Portal Architecture": ["Asset partitioning", "Marketing contacts billing", "Preference centers"]
+    },
+    "Lead Capture": {
+        "Tracking & Source Capture": ["HubSpot tracking code", "Troubleshoot tracking code", "Site tracking", "lead source tracking"],
+        "Conversion Tools": ["Forms", "Landing pages", "CTAs", "Chatflows", "Meeting scheduling tool"],
+        "Email Marketing": ["marketing email", "email marketing tool"],
+        "Campaign Conversion": ["Campaign Conversion"],
+        "Content & Campaign Assets": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager", "Blog publishing", "Smart content", "Progressive profiling"]
+    },
+    "Segmentation & Qualification": {
+        "Lists & Audiences": ["Lists", "Active lists", "Static lists", "Audience management"],
+        "Scoring": ["Lead scoring", "Customer health scoring", "Buyer intent"],
+        "Lifecycle Qualification": ["Lifecycle qualification", "MQL/SQL handoff"],
+        "Routing & Assignment": ["Lead routing and assignment", "territory management"],
+        "Prospecting": ["Prospecting workspace", "LinkedIn Sales Navigator integration"]
+    },
+    "Sales Execution": {
+        "Pipeline Execution": ["deal pipeline reviews", "Deal forecasting", "Creating quotes", "Quotes and CPQ", "eSignature collection"],
+        "Commerce": ["Payments", "Invoices", "Subscriptions", "Payment links"],
+        "Sales Activities": ["Task queues", "Sequences", "HubSpot calling tool"],
+        "Mobile Selling": ["HubSpot mobile app features", "Scan business cards", "Logging mobile calls", "QR code business cards"],
+        "Sales Enablement": ["Coaching tools", "Sales playbooks", "Sales templates snippets", "Meeting tool config", "Playbooks for renewals"]
+    },
+    "Automation": {
+        "Workflow Fundamentals": ["Workflow enrollment", "Workflow re-enrollment", "Workflow testing", "Workflow suppression", "Workflow troubleshooting"],
+        "Workflow Logic": ["If/then branches", "Delays", "Goal criteria", "Enrollment triggers", "Unenrollment triggers"],
+        "Workflow Actions": ["Create tasks", "Send internal notifications", "Send marketing emails", "Update property values", "Create records", "Rotate records", "Copy property values"],
+        "Workflow Automation": ["Deal closed-won automation", "Campaign approval workflows", "Renewal workflows"],
+        "Service Automation": ["Ticket routing"]
+    },
+    "Customer Experience": {
+        "Service Operations": ["Help desk setup", "SLA management", "Tiered SLA management"],
+        "Support Experience": ["Omnichannel inbox", "Customer portal", "Customer portal usage", "Help desk workspace", "Knowledge base article insertion", "Mobile service app", "Chat snippets"],
+        "Customer Success": ["Customer onboarding", "Projects tool", "NPS CSAT surveys"]
+    },
+    "Reporting": {
+        "Dashboards": ["HubSpot reporting dashboards for executives", "RevOps dashboards", "Marketing analytics dashboards"],
+        "Revenue Reporting": ["calculating ROI", "campaign ROI reporting", "multi-touch revenue attribution", "Ads attribution", "Net Revenue Retention reporting", "total churn dashboards"],
+        "Forecasting & Goals": ["Advanced sales forecasting", "Weighted forecast", "forecasting tool", "revenue goal tracking", "goals tool"],
+        "Operational Reporting": ["Cross-functional reporting", "Custom report builder", "marketing team productivity reporting", "rep activity leaderboards", "playbooks reporting", "Ticket SLA reporting", "agent time-to-resolution", "rep scorecards", "customer journey analytics"]
+    },
+    "Integrations & APIs": {
+        "Authentication & Access": ["OAuth setup", "Private Apps", "API limits overview", "API rate limits"],
+        "CRM APIs": ["Custom objects API", "Contacts API", "Company API"],
+        "Automation APIs": ["Webhooks API", "Serverless functions", "Workflows API"],
+        "CMS & Data APIs": ["HubDB API", "GraphQL API", "CMS Hub API"],
+        "Developer Tools & Integrations": ["data sync", "HubSpot CLI", "Local development integrations", "API logging"]
+    }
+}
