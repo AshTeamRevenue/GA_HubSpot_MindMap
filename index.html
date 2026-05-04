@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="data.js"></script>
+    <script src="data.js?v=total-mastery-20260504"></script>
     <style>
         :root { 
             --hs-orange: #ff7a59;
@@ -51,6 +51,16 @@
             margin-left: 15px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.2);
             font-size: 14px; font-weight: 400; color: rgba(255, 122, 89, 0.88); letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .library-stats {
+            margin-left: 14px;
+            color: #8fa0ba;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         #canvas-wrapper { flex: 1; width: 100%; position: relative; }
@@ -169,12 +179,86 @@
             z-index: 200;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
+
+        .search-summary {
+            position: absolute;
+            top: 22px;
+            right: 28px;
+            width: min(360px, calc(100vw - 56px));
+            display: none;
+            padding: 16px;
+            border: 1px solid var(--tr-glass-border);
+            border-radius: 8px;
+            background: rgba(11, 19, 32, 0.9);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+            z-index: 6;
+        }
+        .search-summary.is-visible { display: block; }
+        .summary-eyebrow {
+            margin: 0 0 5px;
+            color: var(--tr-teal);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .summary-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .summary-subtitle {
+            margin: 6px 0 14px;
+            color: #9fb0c8;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .summary-section { margin-top: 12px; }
+        .summary-label {
+            margin: 0 0 7px;
+            color: #dce6f5;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .summary-list {
+            display: grid;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .summary-link,
+        .summary-item {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e1e7f0;
+            font-size: 13px;
+            line-height: 1.35;
+            text-decoration: none;
+        }
+        .summary-link:hover {
+            border-color: rgba(0, 189, 165, 0.5);
+            background: rgba(0, 189, 165, 0.12);
+        }
+        .summary-empty {
+            margin: 0;
+            color: #9fb0c8;
+            font-size: 13px;
+            line-height: 1.45;
+        }
     </style>
 </head>
 <body>
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
-    <span class="header-subtitle">HubSpot Knowledge Base Mapping</span>
+    <span class="header-subtitle">HubSpot Total Mastery Library</span>
+    <span id="library-stats" class="library-stats"></span>
     <button id="collapse-btn" class="nav-btn">Collapse All</button>
     <button id="contact-btn" class="nav-btn contact-btn" type="button">Contact TeamRevenue</button>
     <div class="search-container">
@@ -182,7 +266,10 @@
         <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'tracking')...">
     </div>
 </div>
-<div id="canvas-wrapper"><svg id="canvas"></svg></div>
+<div id="canvas-wrapper">
+    <svg id="canvas"></svg>
+    <aside id="search-summary" class="search-summary" aria-live="polite"></aside>
+</div>
 <div id="node-tooltip" class="node-tooltip"></div>
 
 <div id="contact-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
@@ -277,7 +364,16 @@
     const nodeDescriptions = {
         "HubSpot Core": "Start here for the main operating map across HubSpot tools and workflows.",
         "HUBSPOT CORE": "Start here for the main operating map across HubSpot tools and workflows.",
+        "HUBSPOT TOTAL MASTERY": "The complete mapped HubSpot Knowledge Base curriculum, organized by hub and topic.",
         "Core CRM": "Learn the records, relationships, and pipelines that anchor HubSpot operations.",
+        "Marketing Hub": "Campaign, capture, email, ads, social, and demand generation documentation.",
+        "Sales Hub": "Pipeline, prospecting, meetings, calling, sequences, and sales execution documentation.",
+        "Service Hub": "Help desk, tickets, customer portal, knowledge base, support, and feedback documentation.",
+        "Content Hub": "CMS, website, landing page, blog, SEO, brand, and content operations documentation.",
+        "Operations Hub": "Data management, sync, automation, workflows, properties, and operational tooling.",
+        "Commerce Hub": "Quotes, payments, invoices, products, subscriptions, tax, and revenue transaction documentation.",
+        "Account & Governance": "Account setup, billing, users, permissions, security, privacy, and portal governance.",
+        "AI & Breeze": "Breeze, assistants, agents, AI settings, and HubSpot AI operating guidance.",
         "Standard Objects": "Understand contacts, companies, deals, tickets, products, and line items.",
         "Custom Objects": "Model business-specific data that does not fit standard HubSpot records.",
         "Lifecycle & Stages": "Track where people, deals, and tickets sit in your operating process.",
@@ -294,6 +390,7 @@
         "Tracking & Source Capture": "Install tracking and understand where contacts and conversions come from.",
         "Conversion Tools": "Build forms, CTAs, meetings, chat, and pages that convert visitors.",
         "Email Marketing": "Create, send, test, and analyze marketing email performance.",
+        "Campaign Management": "Create, organize, govern, and maintain HubSpot marketing campaigns.",
         "Campaign Conversion": "Plan campaigns and measure influenced contacts, conversions, and ROI.",
         "Content & Campaign Assets": "Manage social, blog, assets, smart content, and campaign materials.",
         "Segmentation & Qualification": "Group, score, route, and qualify contacts for the right next action.",
@@ -338,8 +435,16 @@
         const rawData = d3.csvParse(sheetData.trim());
         const data = rawData.filter(d => d.Parent && d.Name).map(d => {
             d.Name = d.Name.replace(/<\/?[^>]+(>|$)/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+            d.Hub = d.Hub || "HubSpot Library";
+            d.Summary = d.Summary || d.Functions || "";
             return d;
         });
+
+        const metadata = (typeof libraryMetadata !== 'undefined') ? libraryMetadata : {};
+        const statsEl = document.getElementById('library-stats');
+        if (statsEl && metadata.articleCount) {
+            statsEl.textContent = `${metadata.articleCount.toLocaleString()} articles | ${metadata.topicCount.toLocaleString()} topics`;
+        }
 
         const svg = d3.select("#canvas");
         const g = svg.append("g");
@@ -348,6 +453,7 @@
         let semanticDict = (typeof semanticDictionary !== 'undefined') ? semanticDictionary : {};
 
         const searchInput = document.getElementById('semantic-search');
+        const searchSummary = document.getElementById('search-summary');
         searchInput.addEventListener('input', (e) => handleSearch(e.target.value.toLowerCase().trim()));
 
         // --- Helper Functions ---
@@ -376,10 +482,83 @@
             });
         }
 
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char]));
+        }
+
+        function renderSearchSummary(query, articleMatches, topicMatches, pathMatches, matchCount) {
+            if (!query) {
+                searchSummary.classList.remove("is-visible");
+                searchSummary.innerHTML = "";
+                return;
+            }
+
+            const articleList = articleMatches.slice(0, 6).map(d => {
+                const label = escapeHtml(d.data.name);
+                if (d.data.url) {
+                    return `<li><a class="summary-link" href="${escapeHtml(d.data.url)}" target="_blank" rel="noopener">${label}</a></li>`;
+                }
+                return `<li><span class="summary-item">${label}</span></li>`;
+            }).join("");
+
+            const topicList = topicMatches.slice(0, 5)
+                .map(d => `<li><span class="summary-item">${escapeHtml(d.data.name)}</span></li>`)
+                .join("");
+
+            const containingAreas = pathMatches.filter(d => d.parent === root);
+            const visibleAreas = containingAreas.length ? containingAreas : pathMatches;
+            const pathList = visibleAreas
+                .map(d => `<li><span class="summary-item">${escapeHtml(d.data.name)}</span></li>`)
+                .join("");
+
+            const resultsMarkup = matchCount > 0
+                ? `
+                    ${topicList ? `<div class="summary-section"><p class="summary-label">Matching Topics</p><ul class="summary-list">${topicList}</ul></div>` : ""}
+                    ${articleList ? `<div class="summary-section"><p class="summary-label">Matching Articles</p><ul class="summary-list">${articleList}</ul></div>` : ""}
+                    ${pathList ? `<div class="summary-section"><p class="summary-label">Containing Areas</p><ul class="summary-list">${pathList}</ul></div>` : ""}
+                `
+                : `<p class="summary-empty">No matching HubSpot articles or topic areas were found.</p>`;
+
+            searchSummary.innerHTML = `
+                <p class="summary-eyebrow">Search Results</p>
+                <h2 class="summary-title">${matchCount} match${matchCount === 1 ? "" : "es"} for "${escapeHtml(query)}"</h2>
+                <p class="summary-subtitle">The map is showing matched topics and articles, plus the areas that contain them.</p>
+                ${resultsMarkup}
+            `;
+            searchSummary.classList.add("is-visible");
+        }
+
+        function getAllTreeNodes() {
+            const nodes = [];
+            visitAll(root, d => nodes.push(d));
+            return nodes;
+        }
+
+        function expandVisibleSearchPaths() {
+            visitAll(root, d => {
+                const children = d.children || d._children;
+                if (!children) return;
+
+                if (children.some(c => c.isVisible)) {
+                    d.children = children;
+                    d._children = null;
+                } else if (d.children && d !== root) {
+                    collapseDeep(d);
+                }
+            });
+        }
+
         function handleSearch(query) {
             const counter = document.getElementById('match-counter');
             if (!query) {
                 counter.innerText = "";
+                renderSearchSummary("", [], [], [], 0);
                 if (preSearchState) {
                     restoreExpansionState(preSearchState);
                     preSearchState = null;
@@ -394,8 +573,9 @@
 
             if (!preSearchState) preSearchState = captureExpansionState();
 
-            const terms = query.split(/\s+/).filter(t => t.length > 2);
-            let targets = [query];
+            const stopWords = new Set(["add", "and", "for", "how", "the", "to", "use", "with"]);
+            const terms = query.split(/\s+/).filter(t => t.length > 2 && !stopWords.has(t));
+            let targets = [query].concat(terms);
             for (let [key, arr] of Object.entries(semanticDict)) {
                 if (key.toLowerCase().includes(query) || terms.some(t => key.toLowerCase().includes(t))) {
                     targets = targets.concat(arr.map(t => t.toLowerCase()));
@@ -430,12 +610,14 @@
             }
 
             searchTree(root);
+            expandVisibleSearchPaths();
+            const allNodes = getAllTreeNodes();
+            const highlightedNodes = allNodes.filter(d => d.isHighlighted);
+            const articleMatches = highlightedNodes.filter(d => !d.children && !d._children);
+            const topicMatches = highlightedNodes.filter(d => d.children || d._children);
+            const pathMatches = allNodes.filter(d => d.isOnPath && !d.isHighlighted && d !== root);
             counter.innerText = matchCount > 0 ? `${matchCount} FOUND` : "NO MATCHES";
-
-            // Collapse branches that are not on the search path
-            visitAll(root, d => {
-                if (d.children && !d.isVisible && d !== root) collapseDeep(d);
-            });
+            renderSearchSummary(query, articleMatches, topicMatches, pathMatches, matchCount);
 
             update(root);
         }
@@ -449,14 +631,16 @@
 
         const vpColors = {
             "Core CRM": "#0A98FF",
-            "Data & Governance": "#ff7a59",
-            "Lead Capture": "#a6d854",
-            "Segmentation & Qualification": "#e78ac3",
-            "Sales Execution": "#ffd92f",
-            "Automation": "#00bda5",
-            "Customer Experience": "#8da0cb",
+            "Marketing Hub": "#a6d854",
+            "Sales Hub": "#ffd92f",
+            "Service Hub": "#8da0cb",
+            "Content Hub": "#e78ac3",
+            "Operations Hub": "#00bda5",
+            "Commerce Hub": "#ff7a59",
             "Reporting": "#fc8d62",
-            "Integrations & APIs": "#66c2a5"
+            "Account & Governance": "#66c2a5",
+            "AI & Breeze": "#c6a7ff",
+            "HubSpot Library": "#00bda5"
         };
 
         document.getElementById('collapse-btn').addEventListener('click', () => {
@@ -469,35 +653,58 @@
         const tree = d3.tree().nodeSize([50, 450]);
         let root;
 
-        const vpMapping = {
-            "Core CRM": ["Standard Objects", "Custom Objects", "Lifecycle & Stages", "Activities & Engagements", "Associations", "Pipelines", "Business Structure"],
-            "Data & Governance": ["Properties & Data Quality", "Users, Teams & Permissions", "Security & Compliance", "Portal Architecture"],
-            "Lead Capture": ["Tracking & Source Capture", "Conversion Tools", "Email Marketing", "Campaign Conversion", "Content & Campaign Assets"],
-            "Segmentation & Qualification": ["Lists & Audiences", "Scoring", "Lifecycle Qualification", "Routing & Assignment", "Prospecting"],
-            "Sales Execution": ["Pipeline Execution", "Commerce", "Sales Activities", "Mobile Selling", "Sales Enablement"],
-            "Automation": ["Workflow Fundamentals", "Workflow Logic", "Workflow Actions", "Workflow Automation", "Service Automation"],
-            "Customer Experience": ["Service Operations", "Support Experience", "Customer Success"],
-            "Reporting": ["Dashboards", "Revenue Reporting", "Forecasting & Goals", "Operational Reporting"],
-            "Integrations & APIs": ["Authentication & Access", "CRM APIs", "Automation APIs", "CMS & Data APIs", "Developer Tools & Integrations"]
-        };
+        const hubOrder = [
+            "Core CRM",
+            "Marketing Hub",
+            "Sales Hub",
+            "Service Hub",
+            "Content Hub",
+            "Operations Hub",
+            "Commerce Hub",
+            "Reporting",
+            "Account & Governance",
+            "AI & Breeze",
+            "HubSpot Library"
+        ];
 
         let nodeIdCounter = 0;
-        const nestedData = { name: "HUBSPOT CORE", id: ++nodeIdCounter, children: [] };
+        const nestedData = { name: "HUBSPOT TOTAL MASTERY", id: ++nodeIdCounter, children: [] };
 
-        Object.keys(vpMapping).forEach(vp => {
-            const vpNode = { name: vp, id: ++nodeIdCounter, children: [] };
-            vpMapping[vp].forEach(dir => {
-                const articles = data.filter(d => d.Parent === dir).map(d => ({
+        const byHub = d3.group(data, d => d.Hub);
+        const sortedHubs = Array.from(byHub.keys()).sort((a, b) => {
+            const ai = hubOrder.includes(a) ? hubOrder.indexOf(a) : hubOrder.length;
+            const bi = hubOrder.includes(b) ? hubOrder.indexOf(b) : hubOrder.length;
+            return ai - bi || a.localeCompare(b);
+        });
+
+        sortedHubs.forEach(hub => {
+            const hubRows = byHub.get(hub);
+            const byTopic = d3.group(hubRows, d => d.Parent);
+            const hubNode = {
+                name: hub,
+                id: ++nodeIdCounter,
+                summary: `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`,
+                children: []
+            };
+
+            Array.from(byTopic.keys()).sort((a, b) => a.localeCompare(b)).forEach(topic => {
+                const topicRows = byTopic.get(topic).sort((a, b) => a.Name.localeCompare(b.Name));
+                const articles = topicRows.map(d => ({
                     name: d.Name,
                     url: d.URL,
                     summary: d.Summary || "",
+                    functions: d.Functions || "",
                     id: ++nodeIdCounter
                 }));
-                if (articles.length > 0) {
-                    vpNode.children.push({ name: dir, id: ++nodeIdCounter, children: articles });
-                }
+                hubNode.children.push({
+                    name: topic,
+                    id: ++nodeIdCounter,
+                    summary: `${articles.length.toLocaleString()} article${articles.length === 1 ? "" : "s"}`,
+                    children: articles
+                });
             });
-            nestedData.children.push(vpNode);
+
+            nestedData.children.push(hubNode);
         });
 
         root = d3.hierarchy(nestedData);
@@ -660,10 +867,10 @@
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => d.isHighlighted ? "white" : getCategoryColor(d))
-                .style("fill", d => d.isHighlighted ? "white" : "var(--tr-dark-bg)")
+                .style("stroke", d => d.isHighlighted ? "#ffffff" : getCategoryColor(d))
+                .style("fill", d => d.isHighlighted ? getCategoryColor(d) : "var(--tr-dark-bg)")
                 .style("filter", d => {
-                    if (d.isHighlighted) return "drop-shadow(0 0 15px rgba(255, 255, 255, 1.0))";
+                    if (d.isHighlighted) return `drop-shadow(0 0 15px ${getCategoryColor(d)})`;
                     if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
                     return null;
                 });
