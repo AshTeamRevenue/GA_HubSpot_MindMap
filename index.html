@@ -827,9 +827,8 @@
             const hubs = root.children || [];
             const hubGap = 230;
             const hubStart = 280;
-            const childRowGap = 34;
-            const childLift = 82;
-            const childColumnGap = 205;
+            const childRowGap = 31;
+            const childLift = 72;
 
             root.x = 0;
             root.y = 0;
@@ -843,7 +842,7 @@
                     const count = children.length;
                     children.forEach((child, childIndex) => {
                         child.x = parent.x - childLift - (count - 1 - childIndex) * childRowGap;
-                        child.y = parent.y + (depthOffset === 1 ? 0 : childColumnGap);
+                        child.y = parent.y;
                         layoutChildren(child, depthOffset + 1);
                     });
                 };
