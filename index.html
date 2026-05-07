@@ -919,8 +919,10 @@
             const rowNodes = root.children || [];
             const rowGap = 320;
             const rowStart = 280;
-            const childRowGap = 48;
-            const childLift = 96;
+            const topicRowGap = 48;
+            const topicLift = 96;
+            const branchRowGap = 44;
+            const branchColumnGap = 360;
 
             root.x = 0;
             root.y = 0;
@@ -932,10 +934,16 @@
                 const layoutChildren = parent => {
                     const children = parent.children || [];
                     const count = children.length;
+                    if (!count) return;
 
                     children.forEach((child, childIndex) => {
-                        child.x = parent.x - childLift - (count - 1 - childIndex) * childRowGap;
-                        child.y = parent.y;
+                        if (parent === rowNode) {
+                            child.x = parent.x - topicLift - (count - 1 - childIndex) * topicRowGap;
+                            child.y = parent.y;
+                        } else {
+                            child.x = parent.x - (count - 1 - childIndex) * branchRowGap;
+                            child.y = parent.y + branchColumnGap;
+                        }
                         layoutChildren(child);
                     });
                 };
@@ -946,45 +954,42 @@
 
         function applyCompactSearchLayout(nodes) {
             const visible = new Set(nodes);
-            const rowGap = 56;
-            const columnGap = 335;
-            let row = 0;
+            const topicRowGap = 56;
+            const topicLift = 106;
+            const branchRowGap = 48;
+            const branchColumnGap = 370;
 
-            function layoutNode(node, depth) {
+            function layoutNode(node) {
                 const visibleChildren = (node.children || []).filter(child => visible.has(child));
                 if (node === root) {
                     visibleChildren.forEach((child, index) => {
                         child.x = 0;
                         child.y = 280 + index * 360;
-                        layoutNodeChildren(child);
+                        layoutNodeChildren(child, child);
                     });
                     return 0;
                 }
-
-                node.y = depth * columnGap;
-
-                if (!visibleChildren.length) {
-                    node.x = row * rowGap;
-                    row += 1;
-                    return node.x;
-                }
-
-                const childXs = visibleChildren.map(child => layoutNode(child, depth + 1));
-                node.x = d3.mean(childXs);
                 return node.x;
             }
 
-            function layoutNodeChildren(parent) {
+            function layoutNodeChildren(parent, rowNode) {
                 const visibleChildren = (parent.children || []).filter(child => visible.has(child));
                 const count = visibleChildren.length;
+                if (!count) return;
+
                 visibleChildren.forEach((child, childIndex) => {
-                    child.x = parent.x - 96 - (count - 1 - childIndex) * rowGap;
-                    child.y = parent.y;
-                    layoutNodeChildren(child);
+                    if (parent === rowNode) {
+                        child.x = parent.x - topicLift - (count - 1 - childIndex) * topicRowGap;
+                        child.y = parent.y;
+                    } else {
+                        child.x = parent.x - (count - 1 - childIndex) * branchRowGap;
+                        child.y = parent.y + branchColumnGap;
+                    }
+                    layoutNodeChildren(child, rowNode);
                 });
             }
 
-            layoutNode(root, 0);
+            layoutNode(root);
             const rootOffset = root.x || 0;
             nodes.forEach(d => {
                 d.x -= rootOffset;
