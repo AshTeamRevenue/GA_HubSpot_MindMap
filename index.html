@@ -701,6 +701,12 @@
         sortedHubs.forEach(hub => {
             const hubRows = byHub.get(hub);
 
+            if (sortedHubs.length === 1 && ["HubSpot Library", "HubSpot"].includes(hub)) {
+                appendTopicNodes(nestedData, hubRows);
+                nestedData.summary = `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`;
+                return;
+            }
+
             const hubNode = {
                 name: hub,
                 id: ++nodeIdCounter,
@@ -818,18 +824,18 @@
         }
 
         function applyHubRowLayout() {
-            const hubs = root.children || [];
-            const hubGap = 230;
-            const hubStart = 280;
+            const rowNodes = root.children || [];
+            const rowGap = 230;
+            const rowStart = 280;
             const childRowGap = 34;
             const childLift = 82;
 
             root.x = 0;
             root.y = 0;
 
-            hubs.forEach((hub, index) => {
-                hub.x = 0;
-                hub.y = hubStart + index * hubGap;
+            rowNodes.forEach((rowNode, index) => {
+                rowNode.x = 0;
+                rowNode.y = rowStart + index * rowGap;
 
                 const layoutChildren = parent => {
                     const children = parent.children || [];
@@ -842,7 +848,7 @@
                     });
                 };
 
-                layoutChildren(hub);
+                layoutChildren(rowNode);
             });
         }
 
