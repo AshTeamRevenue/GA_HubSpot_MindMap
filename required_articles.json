@@ -1,0 +1,62 @@
+[
+    {
+        "name": "Manage campaigns",
+        "parent": "Campaign Management",
+        "url": "https://knowledge.hubspot.com/campaigns/manage-campaigns",
+        "summary": "Manage HubSpot campaigns from Marketing > Campaigns, including campaign actions, organization, collaboration, and campaign-level workflow."
+    },
+    {
+        "name": "Create campaigns",
+        "parent": "Campaign Management",
+        "url": "https://knowledge.hubspot.com/campaigns/create-campaigns",
+        "summary": "Create HubSpot campaigns to organize related marketing assets and content, set campaign details, budget, and goals, and report on campaign performance."
+    },
+    {
+        "name": "Create campaigns using campaign templates",
+        "parent": "Campaign Management",
+        "url": "https://knowledge.hubspot.com/campaigns/campaign-templates",
+        "summary": "Use campaign templates to create repeatable marketing campaigns, coordinate work, and guide campaign execution."
+    },
+    {
+        "name": "Associate assets and content with a campaign",
+        "parent": "Campaign Management",
+        "url": "https://knowledge.hubspot.com/campaigns/associate-assets-and-content-with-a-campaign",
+        "summary": "Associate assets such as emails, landing pages, CTAs, forms, social posts, and other content with a HubSpot campaign."
+    },
+    {
+        "name": "Campaigns | Frequently Asked Questions",
+        "parent": "Campaign Management",
+        "url": "https://knowledge.hubspot.com/campaigns/campaigns-faq",
+        "summary": "Review common questions about HubSpot campaigns, campaign behavior, asset association, and campaign reporting."
+    },
+    {
+        "name": "Understand Campaigns",
+        "parent": "Campaign Conversion",
+        "url": "https://knowledge.hubspot.com/campaigns/understand-campaigns",
+        "summary": "Understand how campaigns organize marketing assets and content so teams can measure collective marketing effectiveness."
+    },
+    {
+        "name": "Analyze your campaign ROI",
+        "parent": "Campaign Conversion",
+        "url": "https://knowledge.hubspot.com/campaigns/analyze-your-campaign-roi",
+        "summary": "Review campaign ROI, spend, revenue, attributed revenue, and related performance metrics."
+    },
+    {
+        "name": "Understand your campaign's influenced contacts",
+        "parent": "Campaign Conversion",
+        "url": "https://knowledge.hubspot.com/campaigns/campaign-influenced-contacts",
+        "summary": "Analyze influenced contacts and understand which contacts engaged with assets related to a campaign."
+    },
+    {
+        "name": "Analyze your campaign's contact lifecycle stage metrics",
+        "parent": "Campaign Conversion",
+        "url": "https://knowledge.hubspot.com/campaigns/analyze-your-campaigns-contact-lifecycle-metrics",
+        "summary": "Review campaign contact lifecycle count and cost reports across default and custom lifecycle stages."
+    },
+    {
+        "name": "Use campaign attribution reports",
+        "parent": "Campaign Conversion",
+        "url": "https://knowledge.hubspot.com/campaigns/use-campaign-attribution-reports",
+        "summary": "Use attribution reporting to understand campaign influence across contacts, deals, revenue, and marketing assets."
+    }
+]

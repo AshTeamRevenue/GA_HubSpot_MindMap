@@ -52,5 +52,33 @@
         "analytics",
         "pixel",
         "cookies"
+    ],
+    "campaign manager": [
+        "Campaign Management",
+        "Campaign Conversion",
+        "campaigns tool",
+        "manage campaigns",
+        "create campaigns",
+        "campaign templates",
+        "campaign properties",
+        "campaign goals",
+        "campaign budget",
+        "campaign ROI",
+        "influenced contacts",
+        "associate assets"
+    ],
+    "campaigns": [
+        "Campaign Management",
+        "Campaign Conversion",
+        "campaigns tool",
+        "manage campaigns",
+        "create campaigns",
+        "campaign templates",
+        "campaign properties",
+        "campaign goals",
+        "campaign budget",
+        "campaign ROI",
+        "influenced contacts",
+        "associate assets"
     ]
 }

@@ -23,9 +23,20 @@ except FileNotFoundError:
     print("Warning: dictionary.json not found. Using empty dictionary.")
     semantic_dict = {}
 
+print("Loading required article coverage...")
+try:
+    with open("required_articles.json", "r", encoding="utf-8") as f:
+        required_articles = json.load(f)
+except FileNotFoundError:
+    print("Warning: required_articles.json not found. Using search-only coverage.")
+    required_articles = []
+
 print("Initiating ULTIMATE Data Mine (VPs + Directors + Field Reps)...")
 csv_path = "GA_Reference_Library_V2.csv"
 js_path = "data.js"
+
+def normalize_url(url):
+    return url.split('#')[0].split('?')[0].rstrip('/')
 
 with open(csv_path, "w", encoding="utf-8", newline="") as f:
     writer = csv.writer(f)
@@ -35,6 +46,23 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
     article_id_counter = 0
     seen_urls = set()
     blocked_langs = ['/no/', '/es/', '/fr/', '/de/', '/pt/', '/nl/', '/ja/', '/it/', '/sv/', '/da/', '/fi/', '/pl/', '/zh-cn/', '/zh-tw/', '/ko/', '/th/', '/id/', '/vi/', '/ru/', '/tr/']
+
+    for article in required_articles:
+        url = article.get("url", "")
+        normalized_url = normalize_url(url)
+        if not url or normalized_url in seen_urls:
+            continue
+
+        article_id_counter += 1
+        seen_urls.add(normalized_url)
+        parent = article.get("parent", "Required Coverage")
+        title = article.get("name", "Untitled article")
+        summary = article.get("summary", "")
+        coverage_id = f"REQ-{parent[:3].upper().replace(' ', '')}-{article_id_counter}"
+        writer.writerow([coverage_id, title, parent, url, summary])
+        total_mapped += 1
+        print(f"Required coverage added: {title}")
+
     for vp, directors in library_structure.items():
         for director, topics in directors.items():
             for topic in topics:
@@ -52,7 +80,7 @@ with open(csv_path, "w", encoding="utf-8", newline="") as f:
                         title = re.sub(r'<[^>]+>', '', r.get('title', '')).replace('&quot;', '"').replace('&#39;', "'").strip()
                         url = r.get('url', '')
                         summary = re.sub(r'<[^>]+>', '', r.get('description', '')).replace('"', "'").replace("\n", " ").strip()
-                        normalized_url = url.split('#')[0].split('?')[0].rstrip('/')
+                        normalized_url = normalize_url(url)
                         
                         if "knowledge.hubspot.com" in url and not any(x in url for x in blocked_langs) and normalized_url not in seen_urls:
                             article_id_counter += 1

@@ -631,6 +631,12 @@
 
         const vpColors = {
             "Core CRM": "#0A98FF",
+            "Data & Governance": "#66c2a5",
+            "Lead Capture": "#a6d854",
+            "Segmentation & Qualification": "#ffd92f",
+            "Sales Execution": "#ffb84d",
+            "Automation": "#00bda5",
+            "Customer Experience": "#8da0cb",
             "Marketing Hub": "#a6d854",
             "Sales Hub": "#ffd92f",
             "Service Hub": "#8da0cb",
@@ -638,9 +644,11 @@
             "Operations Hub": "#00bda5",
             "Commerce Hub": "#ff7a59",
             "Reporting": "#fc8d62",
+            "Integrations & APIs": "#c6a7ff",
             "Account & Governance": "#66c2a5",
             "AI & Breeze": "#c6a7ff",
-            "HubSpot Library": "#00bda5"
+            "HubSpot Library": "#00bda5",
+            "Other HubSpot Topics": "#9fb0c8"
         };
 
         document.getElementById('collapse-btn').addEventListener('click', () => {
@@ -655,6 +663,14 @@
 
         const hubOrder = [
             "Core CRM",
+            "Data & Governance",
+            "Lead Capture",
+            "Segmentation & Qualification",
+            "Sales Execution",
+            "Automation",
+            "Customer Experience",
+            "Reporting",
+            "Integrations & APIs",
             "Marketing Hub",
             "Sales Hub",
             "Service Hub",
@@ -667,10 +683,86 @@
             "HubSpot Library"
         ];
 
+        const taxonomyBuckets = {
+            "Core CRM": [
+                "Standard Objects",
+                "Custom Objects",
+                "Lifecycle & Stages",
+                "Activities & Engagements",
+                "Associations",
+                "Pipelines",
+                "Business Structure"
+            ],
+            "Data & Governance": [
+                "Properties & Data Quality",
+                "Users, Teams & Permissions",
+                "Security & Compliance",
+                "Portal Architecture"
+            ],
+            "Lead Capture": [
+                "Tracking & Source Capture",
+                "Conversion Tools",
+                "Email Marketing",
+                "Campaign Management",
+                "Campaign Conversion",
+                "Content & Campaign Assets"
+            ],
+            "Segmentation & Qualification": [
+                "Lists & Audiences",
+                "Scoring",
+                "Lifecycle Qualification",
+                "Routing & Assignment",
+                "Prospecting"
+            ],
+            "Sales Execution": [
+                "Pipeline Execution",
+                "Commerce",
+                "Sales Activities",
+                "Mobile Selling",
+                "Sales Enablement"
+            ],
+            "Automation": [
+                "Workflow Fundamentals",
+                "Workflow Logic",
+                "Workflow Actions",
+                "Workflow Automation",
+                "Service Automation"
+            ],
+            "Customer Experience": [
+                "Service Operations",
+                "Support Experience",
+                "Customer Success"
+            ],
+            "Reporting": [
+                "Dashboards",
+                "Revenue Reporting",
+                "Forecasting & Goals",
+                "Operational Reporting"
+            ],
+            "Integrations & APIs": [
+                "Authentication & Access",
+                "CRM APIs",
+                "Automation APIs",
+                "CMS & Data APIs",
+                "Developer Tools & Integrations"
+            ]
+        };
+
+        const topicToBucket = new Map();
+        Object.entries(taxonomyBuckets).forEach(([bucket, topics]) => {
+            topics.forEach(topic => topicToBucket.set(topic, bucket));
+        });
+
         let nodeIdCounter = 0;
         const nestedData = { name: "HubSpot", id: ++nodeIdCounter, children: [] };
 
-        const byHub = d3.group(data, d => d.Hub);
+        function getBaseBucket(row) {
+            if (topicToBucket.has(row.Parent)) return topicToBucket.get(row.Parent);
+            if (row.Hub && row.Hub !== "HubSpot Library") return row.Hub;
+            return "Other HubSpot Topics";
+        }
+
+        const byHub = d3.group(data, getBaseBucket);
         const sortedHubs = Array.from(byHub.keys()).sort((a, b) => {
             const ai = hubOrder.includes(a) ? hubOrder.indexOf(a) : hubOrder.length;
             const bi = hubOrder.includes(b) ? hubOrder.indexOf(b) : hubOrder.length;
@@ -710,7 +802,7 @@
             const hubNode = {
                 name: hub,
                 id: ++nodeIdCounter,
-                summary: `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`,
+                summary: `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles across ${d3.group(hubRows, d => d.Parent).size.toLocaleString()} topic areas`,
                 children: []
             };
 
@@ -825,10 +917,10 @@
 
         function applyHubRowLayout() {
             const rowNodes = root.children || [];
-            const rowGap = 230;
+            const rowGap = 320;
             const rowStart = 280;
-            const childRowGap = 34;
-            const childLift = 82;
+            const childRowGap = 48;
+            const childLift = 96;
 
             root.x = 0;
             root.y = 0;
@@ -854,8 +946,8 @@
 
         function applyCompactSearchLayout(nodes) {
             const visible = new Set(nodes);
-            const rowGap = 46;
-            const columnGap = 285;
+            const rowGap = 56;
+            const columnGap = 335;
             let row = 0;
 
             function layoutNode(node, depth) {
@@ -863,7 +955,7 @@
                 if (node === root) {
                     visibleChildren.forEach((child, index) => {
                         child.x = 0;
-                        child.y = 280 + index * 230;
+                        child.y = 280 + index * 360;
                         layoutNodeChildren(child);
                     });
                     return 0;
@@ -886,7 +978,7 @@
                 const visibleChildren = (parent.children || []).filter(child => visible.has(child));
                 const count = visibleChildren.length;
                 visibleChildren.forEach((child, childIndex) => {
-                    child.x = parent.x - 82 - (count - 1 - childIndex) * rowGap;
+                    child.x = parent.x - 96 - (count - 1 - childIndex) * rowGap;
                     child.y = parent.y;
                     layoutNodeChildren(child);
                 });
@@ -899,7 +991,7 @@
             });
         }
 
-        function splitLabel(name, maxChars = 13) {
+        function splitLabel(name, maxChars = 13, maxLines = Infinity) {
             const words = String(name).split(/\s+/);
             const lines = [];
             let line = "";
@@ -915,6 +1007,12 @@
             });
 
             if (line) lines.push(line);
+            if (lines.length > maxLines) {
+                const visibleLines = lines.slice(0, maxLines);
+                const lastIndex = visibleLines.length - 1;
+                visibleLines[lastIndex] = `${visibleLines[lastIndex].replace(/\.+$/, "")}...`;
+                return visibleLines;
+            }
             return lines;
         }
 
@@ -923,19 +1021,22 @@
                 const label = d3.select(this);
                 const isHub = d.depth === 1;
                 const isRoot = d.depth === 0;
-                const lines = isHub ? splitLabel(d.data.name) : [d.data.name];
+                const maxChars = isHub ? 14 : (d.depth === 2 ? 22 : 34);
+                const maxLines = isHub ? 3 : (d.depth === 2 ? 3 : 2);
+                const lines = isRoot ? [d.data.name] : splitLabel(d.data.name, maxChars, maxLines);
+                const labelX = isHub ? 0 : (isRoot ? -18 : 18);
 
                 label.selectAll("tspan").remove();
                 label
-                    .attr("x", isHub ? 0 : (isRoot ? -18 : 18))
+                    .attr("x", labelX)
                     .attr("y", isHub ? 25 : null)
-                    .attr("dy", isHub ? null : ".35em")
+                    .attr("dy", null)
                     .attr("text-anchor", isHub ? "middle" : (isRoot ? "end" : "start"));
 
                 lines.forEach((line, index) => {
                     label.append("tspan")
-                        .attr("x", isHub ? 0 : (isRoot ? -18 : 18))
-                        .attr("dy", isHub ? (index === 0 ? 0 : 15) : 0)
+                        .attr("x", labelX)
+                        .attr("dy", index === 0 ? (isHub ? 0 : `${-(lines.length - 1) * 0.55}em`) : "1.1em")
                         .text(line);
                 });
             });

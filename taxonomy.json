@@ -18,7 +18,8 @@
         "Tracking & Source Capture": ["HubSpot tracking code", "Troubleshoot tracking code", "Site tracking", "lead source tracking"],
         "Conversion Tools": ["Forms", "Landing pages", "CTAs", "Chatflows", "Meeting scheduling tool"],
         "Email Marketing": ["marketing email", "email marketing tool"],
-        "Campaign Conversion": ["Campaign Conversion"],
+        "Campaign Management": ["Campaign Manager", "Manage campaigns", "Create campaigns", "Campaign properties", "Campaign templates", "Campaign goals", "Campaign budget", "Associate assets and content with a campaign"],
+        "Campaign Conversion": ["Campaign Conversion", "Campaign ROI", "Influenced contacts", "Campaign attribution", "Campaign performance"],
         "Content & Campaign Assets": ["Social media tool", "Breeze AI content remix", "HubSpot mobile social app", "Asset manager", "Blog publishing", "Smart content", "Progressive profiling"]
     },
     "Segmentation & Qualification": {
