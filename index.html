@@ -1045,16 +1045,25 @@
 
             // Auto-center and zoom
             if (nodes.length > 0) {
-                const xr = d3.extent(nodes, d => d.y);
-                const yr = d3.extent(nodes, d => d.x);
-                const tw = xr[1] - xr[0];
-                const th = yr[1] - yr[0];
                 const vw = wrapper.clientWidth;
                 const vh = wrapper.clientHeight;
+                let s;
+                let tx;
+                let ty;
 
-                let s = Math.min(0.9, 0.9 / Math.max(tw / vw, th / vh));
-                const tx = (vw - tw * s) / 2 - xr[0] * s;
-                const ty = (vh - th * s) / 2 - yr[0] * s;
+                if (searchActive) {
+                    const xr = d3.extent(nodes, d => d.y);
+                    const yr = d3.extent(nodes, d => d.x);
+                    const tw = xr[1] - xr[0];
+                    const th = yr[1] - yr[0];
+                    s = Math.max(0.45, Math.min(0.9, 0.9 / Math.max(tw / vw, th / vh)));
+                    tx = (vw - tw * s) / 2 - xr[0] * s;
+                    ty = (vh - th * s) / 2 - yr[0] * s;
+                } else {
+                    s = 0.85;
+                    tx = vw * 0.48 - source.y * s;
+                    ty = vh * 0.58 - source.x * s;
+                }
 
                 svg.transition().duration(750)
                    .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(s));
