@@ -860,6 +860,15 @@
 
             function layoutNode(node, depth) {
                 const visibleChildren = (node.children || []).filter(child => visible.has(child));
+                if (node === root) {
+                    visibleChildren.forEach((child, index) => {
+                        child.x = 0;
+                        child.y = 280 + index * 230;
+                        layoutNodeChildren(child);
+                    });
+                    return 0;
+                }
+
                 node.y = depth * columnGap;
 
                 if (!visibleChildren.length) {
@@ -871,6 +880,16 @@
                 const childXs = visibleChildren.map(child => layoutNode(child, depth + 1));
                 node.x = d3.mean(childXs);
                 return node.x;
+            }
+
+            function layoutNodeChildren(parent) {
+                const visibleChildren = (parent.children || []).filter(child => visible.has(child));
+                const count = visibleChildren.length;
+                visibleChildren.forEach((child, childIndex) => {
+                    child.x = parent.x - 82 - (count - 1 - childIndex) * rowGap;
+                    child.y = parent.y;
+                    layoutNodeChildren(child);
+                });
             }
 
             layoutNode(root, 0);
