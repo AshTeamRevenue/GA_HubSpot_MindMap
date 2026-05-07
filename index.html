@@ -827,27 +827,44 @@
             const hubs = root.children || [];
             const hubGap = 230;
             const hubStart = 280;
-            const childRowGap = 31;
-            const childLift = 72;
+            const childRowGap = 46;
+            const childLift = 110;
+            const nestedColumnGap = 300;
+
+            root.descendants().forEach(d => {
+                d.layoutX = d.x;
+            });
 
             root.x = 0;
             root.y = 0;
 
             hubs.forEach((hub, index) => {
+                const hubTreeX = hub.layoutX;
                 hub.x = 0;
                 hub.y = hubStart + index * hubGap;
 
-                const layoutChildren = (parent, depthOffset) => {
+                const layoutChildren = parent => {
                     const children = parent.children || [];
-                    const count = children.length;
-                    children.forEach((child, childIndex) => {
-                        child.x = parent.x - childLift - (count - 1 - childIndex) * childRowGap;
-                        child.y = parent.y;
-                        layoutChildren(child, depthOffset + 1);
+                    if (!children.length) return;
+
+                    const minChildX = d3.min(children, child => child.layoutX);
+                    const maxChildX = d3.max(children, child => child.layoutX);
+                    const childCenterX = (minChildX + maxChildX) / 2;
+
+                    children.forEach(child => {
+                        child.x = parent.x - childLift + (child.layoutX - childCenterX) * (childRowGap / 46);
+                        child.y = parent.depth === 1 ? parent.y : parent.y + nestedColumnGap;
+                        layoutChildren(child);
                     });
                 };
 
-                layoutChildren(hub, 1);
+                hub.descendants().forEach(d => {
+                    if (d === hub) return;
+                    d.x = hub.x - childLift + (d.layoutX - hubTreeX) * (childRowGap / 46);
+                    d.y = hub.y;
+                });
+
+                layoutChildren(hub);
             });
         }
 
