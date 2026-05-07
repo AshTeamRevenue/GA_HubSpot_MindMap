@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TeamRevenue - HubSpot Growth Architecture</title>
+    <title>TeamRevenue - HubSpot Mind Map</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -257,7 +257,7 @@
 <body>
 <div class="glass-header">
     <h1 class="header-title">TeamRevenue</h1>
-    <span class="header-subtitle">HubSpot Total Mastery Library</span>
+    <span class="header-subtitle">HubSpot Mind Map</span>
     <span id="library-stats" class="library-stats"></span>
     <button id="collapse-btn" class="nav-btn">Collapse All</button>
     <button id="contact-btn" class="nav-btn contact-btn" type="button">Contact TeamRevenue</button>
@@ -364,7 +364,7 @@
     const nodeDescriptions = {
         "HubSpot Core": "Start here for the main operating map across HubSpot tools and workflows.",
         "HUBSPOT CORE": "Start here for the main operating map across HubSpot tools and workflows.",
-        "HUBSPOT TOTAL MASTERY": "The complete mapped HubSpot Knowledge Base curriculum, organized by hub and topic.",
+        "HubSpot": "The complete mapped HubSpot Knowledge Base curriculum, organized by hub and topic.",
         "Core CRM": "Learn the records, relationships, and pipelines that anchor HubSpot operations.",
         "Marketing Hub": "Campaign, capture, email, ads, social, and demand generation documentation.",
         "Sales Hub": "Pipeline, prospecting, meetings, calling, sequences, and sales execution documentation.",
@@ -650,7 +650,7 @@
         });
 
         // --- Data Structuring ---
-        const tree = d3.tree().nodeSize([50, 450]);
+        const tree = d3.tree().nodeSize([46, 300]);
         let root;
 
         const hubOrder = [
@@ -668,7 +668,7 @@
         ];
 
         let nodeIdCounter = 0;
-        const nestedData = { name: "HUBSPOT TOTAL MASTERY", id: ++nodeIdCounter, children: [] };
+        const nestedData = { name: "HubSpot", id: ++nodeIdCounter, children: [] };
 
         const byHub = d3.group(data, d => d.Hub);
         const sortedHubs = Array.from(byHub.keys()).sort((a, b) => {
@@ -677,15 +677,8 @@
             return ai - bi || a.localeCompare(b);
         });
 
-        sortedHubs.forEach(hub => {
-            const hubRows = byHub.get(hub);
+        function appendTopicNodes(parentNode, hubRows) {
             const byTopic = d3.group(hubRows, d => d.Parent);
-            const hubNode = {
-                name: hub,
-                id: ++nodeIdCounter,
-                summary: `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`,
-                children: []
-            };
 
             Array.from(byTopic.keys()).sort((a, b) => a.localeCompare(b)).forEach(topic => {
                 const topicRows = byTopic.get(topic).sort((a, b) => a.Name.localeCompare(b.Name));
@@ -696,14 +689,32 @@
                     functions: d.Functions || "",
                     id: ++nodeIdCounter
                 }));
-                hubNode.children.push({
+                parentNode.children.push({
                     name: topic,
                     id: ++nodeIdCounter,
                     summary: `${articles.length.toLocaleString()} article${articles.length === 1 ? "" : "s"}`,
                     children: articles
                 });
             });
+        }
 
+        sortedHubs.forEach(hub => {
+            const hubRows = byHub.get(hub);
+
+            if (sortedHubs.length === 1 && ["HubSpot Library", "HubSpot"].includes(hub)) {
+                appendTopicNodes(nestedData, hubRows);
+                nestedData.summary = `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`;
+                return;
+            }
+
+            const hubNode = {
+                name: hub,
+                id: ++nodeIdCounter,
+                summary: `${hubRows.length.toLocaleString()} HubSpot Knowledge Base articles`,
+                children: []
+            };
+
+            appendTopicNodes(hubNode, hubRows);
             nestedData.children.push(hubNode);
         });
 
@@ -768,7 +779,10 @@
         }
 
         function diagonal(s, d) {
-            return `M ${d.y} ${d.x} C ${(s.y + d.y) / 2} ${d.x}, ${(s.y + d.y) / 2} ${s.x}, ${s.y} ${s.x}`;
+            if (d.depth === 1) {
+                return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`;
+            }
+            return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`;
         }
 
         function getCategoryColor(d) {
@@ -809,9 +823,109 @@
             nodeTooltip.style.display = "none";
         }
 
+        function applyHubRowLayout() {
+            const hubs = root.children || [];
+            const hubGap = 230;
+            const hubStart = 280;
+            const childRowGap = 34;
+            const childLift = 82;
+            const childColumnGap = 205;
+
+            root.x = 0;
+            root.y = 0;
+
+            hubs.forEach((hub, index) => {
+                hub.x = 0;
+                hub.y = hubStart + index * hubGap;
+
+                const layoutChildren = (parent, depthOffset) => {
+                    const children = parent.children || [];
+                    const count = children.length;
+                    children.forEach((child, childIndex) => {
+                        child.x = parent.x - childLift - (count - 1 - childIndex) * childRowGap;
+                        child.y = parent.y + (depthOffset === 1 ? 0 : childColumnGap);
+                        layoutChildren(child, depthOffset + 1);
+                    });
+                };
+
+                layoutChildren(hub, 1);
+            });
+        }
+
+        function applyCompactSearchLayout(nodes) {
+            const visible = new Set(nodes);
+            const rowGap = 46;
+            const columnGap = 285;
+            let row = 0;
+
+            function layoutNode(node, depth) {
+                const visibleChildren = (node.children || []).filter(child => visible.has(child));
+                node.y = depth * columnGap;
+
+                if (!visibleChildren.length) {
+                    node.x = row * rowGap;
+                    row += 1;
+                    return node.x;
+                }
+
+                const childXs = visibleChildren.map(child => layoutNode(child, depth + 1));
+                node.x = d3.mean(childXs);
+                return node.x;
+            }
+
+            layoutNode(root, 0);
+            const rootOffset = root.x || 0;
+            nodes.forEach(d => {
+                d.x -= rootOffset;
+            });
+        }
+
+        function splitLabel(name, maxChars = 13) {
+            const words = String(name).split(/\s+/);
+            const lines = [];
+            let line = "";
+
+            words.forEach(word => {
+                const candidate = line ? `${line} ${word}` : word;
+                if (candidate.length <= maxChars) {
+                    line = candidate;
+                } else {
+                    if (line) lines.push(line);
+                    line = word;
+                }
+            });
+
+            if (line) lines.push(line);
+            return lines;
+        }
+
+        function renderNodeLabel(selection) {
+            selection.each(function(d) {
+                const label = d3.select(this);
+                const isHub = d.depth === 1;
+                const isRoot = d.depth === 0;
+                const lines = isHub ? splitLabel(d.data.name) : [d.data.name];
+
+                label.selectAll("tspan").remove();
+                label
+                    .attr("x", isHub ? 0 : (isRoot ? -18 : 18))
+                    .attr("y", isHub ? 25 : null)
+                    .attr("dy", isHub ? null : ".35em")
+                    .attr("text-anchor", isHub ? "middle" : (isRoot ? "end" : "start"));
+
+                lines.forEach((line, index) => {
+                    label.append("tspan")
+                        .attr("x", isHub ? 0 : (isRoot ? -18 : 18))
+                        .attr("dy", isHub ? (index === 0 ? 0 : 15) : 0)
+                        .text(line);
+                });
+            });
+        }
+
         // --- Core Render Loop ---
         function update(source) {
             tree(root);
+            applyHubRowLayout();
             let nodes = root.descendants();
             let links = root.links();
             const searchActive = searchInput.value.trim() !== "";
@@ -829,13 +943,14 @@
                     return true;
                 });
                 links = links.filter(l => nodes.includes(l.source) && nodes.includes(l.target));
+                applyCompactSearchLayout(nodes);
             }
 
             // Nodes
             const node = g.selectAll("g.node").data(nodes, d => d.data.id);
             
             const nodeEnter = node.enter().append("g")
-                .attr("class", d => "node" + (!d.children && !d._children ? " node--leaf" : ""))
+                .attr("class", d => "node" + (d.depth === 1 ? " node--hub" : "") + (!d.children && !d._children ? " node--leaf" : ""))
                 .attr("transform", d => `translate(${source.y0},${source.x0})`)
                 .on("click", (e, d) => {
                     if (!d.children && !d._children && d.data.url) {
@@ -849,13 +964,11 @@
             nodeEnter.append("circle").attr("r", 1e-6);
 
             nodeEnter.append("text")
-                .attr("dy", ".35em")
-                .attr("x", d => d.children || d._children ? -18 : 18)
-                .attr("text-anchor", d => d.children || d._children ? "end" : "start")
-                .text(d => d.data.name)
                 .style("fill-opacity", 1e-6);
 
             const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate.attr("class", d => "node" + (d.depth === 1 ? " node--hub" : "") + (!d.children && !d._children ? " node--leaf" : ""));
 
             nodeUpdate
                 .on("mouseover", showNodeTooltip)
@@ -876,6 +989,7 @@
                 });
 
             nodeUpdate.select("text")
+                .call(renderNodeLabel)
                 .style("fill-opacity", 1)
                 .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
                 .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : "600")
