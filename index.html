@@ -821,39 +821,28 @@
             const hubs = root.children || [];
             const hubGap = 230;
             const hubStart = 280;
-            const firstLevelLift = 120;
-            const verticalRowGap = 34;
-            const verticalLift = 82;
-            const horizontalScale = 1;
-
-            root.descendants().forEach(d => {
-                d.layoutX = d.x;
-            });
+            const childRowGap = 34;
+            const childLift = 82;
 
             root.x = 0;
             root.y = 0;
 
             hubs.forEach((hub, index) => {
-                const hubLayoutX = hub.layoutX;
                 hub.x = 0;
                 hub.y = hubStart + index * hubGap;
 
-                const layoutVerticalChildren = parent => {
+                const layoutChildren = parent => {
                     const children = parent.children || [];
                     const count = children.length;
 
                     children.forEach((child, childIndex) => {
-                        child.x = parent.x - verticalLift - (count - 1 - childIndex) * verticalRowGap;
+                        child.x = parent.x - childLift - (count - 1 - childIndex) * childRowGap;
                         child.y = parent.y;
-                        layoutVerticalChildren(child);
+                        layoutChildren(child);
                     });
                 };
 
-                (hub.children || []).forEach(child => {
-                    child.x = hub.x - firstLevelLift;
-                    child.y = hub.y + (child.layoutX - hubLayoutX) * horizontalScale;
-                    layoutVerticalChildren(child);
-                });
+                layoutChildren(hub);
             });
         }
 
