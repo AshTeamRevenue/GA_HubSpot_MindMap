@@ -63,8 +63,8 @@
             white-space: nowrap;
         }
 
-        #canvas-wrapper { flex: 1; width: 100%; position: relative; }
-        #canvas { width: 100%; height: 100%; cursor: grab; }
+        #canvas-wrapper { flex: 1; width: 100%; min-height: 0; position: relative; display: flex; overflow: hidden; }
+        #canvas { flex: 1 1 auto; min-width: 0; height: 100%; cursor: grab; }
         #canvas:active { cursor: grabbing; }
 
         .node { cursor: pointer; }
@@ -181,12 +181,13 @@
         }
 
         .search-summary {
-            position: absolute;
-            top: 22px;
-            right: 28px;
-            width: min(360px, calc(100vw - 56px));
+            flex: 0 0 min(360px, calc(100vw - 56px));
+            align-self: flex-start;
+            max-height: calc(100% - 44px);
             display: none;
+            margin: 22px 28px 22px 0;
             padding: 16px;
+            overflow-y: auto;
             border: 1px solid var(--tr-glass-border);
             border-radius: 8px;
             background: rgba(11, 19, 32, 0.9);
@@ -1151,7 +1152,7 @@
 
             // Auto-center and zoom
             if (nodes.length > 0) {
-                const vw = wrapper.clientWidth;
+                const vw = svg.node().clientWidth;
                 const vh = wrapper.clientHeight;
                 let s;
                 let tx;
@@ -1162,11 +1163,7 @@
                     const yr = d3.extent(nodes, d => d.x);
                     const tw = Math.max(1, xr[1] - xr[0]);
                     const th = Math.max(1, yr[1] - yr[0]);
-                    const summaryRect = searchSummary.classList.contains("is-visible")
-                        ? searchSummary.getBoundingClientRect()
-                        : { width: 0 };
-                    const panelReserve = summaryRect.width ? summaryRect.width + 56 : 0;
-                    const fitWidth = Math.max(320, vw - panelReserve);
+                    const fitWidth = Math.max(320, vw);
                     const fitHeight = Math.max(240, vh - 72);
                     const scaleToFit = Math.min(fitWidth / tw, fitHeight / th) * 0.88;
                     s = Math.max(0.32, Math.min(0.9, scaleToFit));
