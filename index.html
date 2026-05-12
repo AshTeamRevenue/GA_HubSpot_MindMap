@@ -1160,10 +1160,17 @@
                 if (searchActive) {
                     const xr = d3.extent(nodes, d => d.y);
                     const yr = d3.extent(nodes, d => d.x);
-                    const tw = xr[1] - xr[0];
-                    const th = yr[1] - yr[0];
-                    s = Math.max(0.45, Math.min(0.9, 0.9 / Math.max(tw / vw, th / vh)));
-                    tx = (vw - tw * s) / 2 - xr[0] * s;
+                    const tw = Math.max(1, xr[1] - xr[0]);
+                    const th = Math.max(1, yr[1] - yr[0]);
+                    const summaryRect = searchSummary.classList.contains("is-visible")
+                        ? searchSummary.getBoundingClientRect()
+                        : { width: 0 };
+                    const panelReserve = summaryRect.width ? summaryRect.width + 56 : 0;
+                    const fitWidth = Math.max(320, vw - panelReserve);
+                    const fitHeight = Math.max(240, vh - 72);
+                    const scaleToFit = Math.min(fitWidth / tw, fitHeight / th) * 0.88;
+                    s = Math.max(0.32, Math.min(0.9, scaleToFit));
+                    tx = (fitWidth - tw * s) / 2 - xr[0] * s;
                     ty = (vh - th * s) / 2 - yr[0] * s;
                 } else {
                     s = 0.85;
