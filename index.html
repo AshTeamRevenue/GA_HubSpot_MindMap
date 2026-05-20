@@ -63,8 +63,8 @@
             white-space: nowrap;
         }
 
-        #canvas-wrapper { flex: 1; width: 100%; min-height: 0; position: relative; display: flex; overflow: hidden; }
-        #canvas { flex: 1 1 auto; min-width: 0; height: 100%; cursor: grab; }
+        #canvas-wrapper { flex: 1; width: 100%; position: relative; }
+        #canvas { width: 100%; height: 100%; cursor: grab; }
         #canvas:active { cursor: grabbing; }
 
         .node { cursor: pointer; }
@@ -181,21 +181,17 @@
         }
 
         .search-summary {
-            flex: 0 0 min(360px, calc(100vw - 56px));
-            align-self: flex-start;
-            max-height: calc(100% - 44px);
+            position: absolute;
+            top: 22px;
+            right: 28px;
+            width: min(360px, calc(100vw - 56px));
             display: none;
-            margin: 22px 28px 22px 0;
             padding: 16px;
-            overflow-y: auto;
             border: 1px solid var(--tr-glass-border);
             border-radius: 8px;
             background: rgba(11, 19, 32, 0.9);
             box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
             z-index: 6;
-        }
-        #canvas-wrapper.has-search-summary .search-summary {
-            margin-left: 24px;
         }
         .search-summary.is-visible { display: block; }
         .summary-eyebrow {
@@ -523,7 +519,6 @@
         function renderSearchSummary(query, articleMatches, topicMatches, pathMatches, matchCount) {
             if (!query) {
                 searchSummary.classList.remove("is-visible");
-                wrapper.classList.remove("has-search-summary");
                 searchSummary.innerHTML = "";
                 return;
             }
@@ -561,7 +556,6 @@
                 ${resultsMarkup}
             `;
             searchSummary.classList.add("is-visible");
-            wrapper.classList.add("has-search-summary");
         }
 
         function getAllTreeNodes() {
@@ -981,7 +975,7 @@
             const topicLift = 106;
             const branchRowGap = 48;
             const branchColumnGap = 370;
-            const rowDirections = new Map();
+            const branchDirections = new Map();
 
             function layoutNode(node) {
                 const visibleChildren = (node.children || []).filter(child => visible.has(child));
@@ -989,7 +983,7 @@
                     visibleChildren.forEach((child, index) => {
                         child.x = 0;
                         child.y = 280 + index * 360;
-                        rowDirections.set(child, index % 2 === 0 ? -1 : 1);
+                        branchDirections.set(child, index % 2 === 0 ? -1 : 1);
                         layoutNodeChildren(child, child);
                     });
                     return 0;
@@ -1003,12 +997,12 @@
                 if (!count) return;
 
                 visibleChildren.forEach((child, childIndex) => {
-                    const direction = rowDirections.get(rowNode) || -1;
+                    const direction = branchDirections.get(rowNode) || -1;
                     if (parent === rowNode) {
                         child.x = parent.x + direction * (topicLift + (count - 1 - childIndex) * topicRowGap);
                         child.y = parent.y;
                     } else {
-                        child.x = parent.x + direction * ((count - 1 - childIndex) * branchRowGap);
+                        child.x = parent.x + direction * (branchRowGap + (count - 1 - childIndex) * branchRowGap);
                         child.y = parent.y + branchColumnGap;
                     }
                     layoutNodeChildren(child, rowNode);
@@ -1131,9 +1125,10 @@
 
             nodeUpdate.select("circle")
                 .attr("r", 10)
-                .style("stroke", d => d.isHighlighted ? "#ffffff" : getCategoryColor(d))
-                .style("fill", d => d.isHighlighted ? getCategoryColor(d) : "var(--tr-dark-bg)")
+                .style("stroke", d => searchActive ? getCategoryColor(d) : (d.isHighlighted ? "#ffffff" : getCategoryColor(d)))
+                .style("fill", d => searchActive ? "var(--tr-dark-bg)" : (d.isHighlighted ? getCategoryColor(d) : "var(--tr-dark-bg)"))
                 .style("filter", d => {
+                    if (searchActive) return null;
                     if (d.isHighlighted) return `drop-shadow(0 0 15px ${getCategoryColor(d)})`;
                     if (d.isOnPath) return `drop-shadow(0 0 12px ${getCategoryColor(d)})`;
                     return null;
@@ -1142,9 +1137,10 @@
             nodeUpdate.select("text")
                 .call(renderNodeLabel)
                 .style("fill-opacity", 1)
-                .style("fill", d => (d.isHighlighted || d.isOnPath) ? "#ffffff" : null)
-                .style("font-weight", d => (d.isHighlighted || d.isOnPath) ? "800" : "600")
+                .style("fill", d => searchActive ? "#e1e7f0" : ((d.isHighlighted || d.isOnPath) ? "#ffffff" : null))
+                .style("font-weight", d => searchActive ? "600" : ((d.isHighlighted || d.isOnPath) ? "800" : "600"))
                 .style("text-shadow", d => {
+                    if (searchActive) return "0 2px 4px rgba(0,0,0,0.8)";
                     if (d.isHighlighted) return "0 0 10px rgba(255,255,255,0.8)";
                     if (d.isOnPath) return `0 0 10px ${getCategoryColor(d)}`;
                     return null;
@@ -1165,9 +1161,18 @@
 
             linkUpdate.transition().duration(600)
                 .attr("d", d => diagonal(d.source, d.target))
-                .style("stroke", d => (d.target.isOnPath || d.target.isHighlighted) ? getCategoryColor(d.target) : "rgba(255,255,255,0.15)")
-                .style("stroke-width", d => (d.target.isOnPath || d.target.isHighlighted) ? "6px" : "2px")
-                .style("stroke-opacity", d => (d.target.isOnPath || d.target.isHighlighted) ? 1.0 : 0.3);
+                .style("stroke", d => {
+                    if (searchActive) return "rgba(255,255,255,0.15)";
+                    return (d.target.isOnPath || d.target.isHighlighted) ? getCategoryColor(d.target) : "rgba(255,255,255,0.15)";
+                })
+                .style("stroke-width", d => {
+                    if (searchActive) return "2px";
+                    return (d.target.isOnPath || d.target.isHighlighted) ? "6px" : "2px";
+                })
+                .style("stroke-opacity", d => {
+                    if (searchActive) return 1;
+                    return (d.target.isOnPath || d.target.isHighlighted) ? 1.0 : 0.3;
+                });
 
             link.exit().transition().duration(500)
                 .attr("d", d => diagonal({x: source.x, y: source.y}, {x: source.x, y: source.y}))
@@ -1177,7 +1182,7 @@
 
             // Auto-center and zoom
             if (nodes.length > 0) {
-                const vw = svg.node().clientWidth;
+                const vw = wrapper.clientWidth;
                 const vh = wrapper.clientHeight;
                 let s;
                 let tx;
@@ -1188,8 +1193,11 @@
                     const yr = d3.extent(nodes, d => d.x);
                     const tw = Math.max(1, xr[1] - xr[0]);
                     const th = Math.max(1, yr[1] - yr[0]);
-                    const labelReserve = Math.min(280, Math.max(150, vw * 0.18));
-                    const fitWidth = Math.max(320, vw - labelReserve);
+                    const summaryRect = searchSummary.classList.contains("is-visible")
+                        ? searchSummary.getBoundingClientRect()
+                        : { width: 0 };
+                    const panelReserve = summaryRect.width ? summaryRect.width + 56 : 0;
+                    const fitWidth = Math.max(320, vw - panelReserve);
                     const fitHeight = Math.max(240, vh - 72);
                     const scaleToFit = Math.min(fitWidth / tw, fitHeight / th) * 0.88;
                     s = Math.max(0.32, Math.min(0.9, scaleToFit));
