@@ -496,6 +496,30 @@
             }[char]));
         }
 
+        function normalizeSearchText(value) {
+            return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+        }
+
+        function escapeRegExp(value) {
+            return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
+        function hasExactSearchPhrase(text, phrase) {
+            const normalizedPhrase = normalizeSearchText(phrase);
+            if (!normalizedPhrase) return false;
+
+            const escapedPhrase = normalizedPhrase
+                .split(" ")
+                .map(escapeRegExp)
+                .join("\\s+");
+            const matcher = new RegExp(`(^|[^a-z0-9])${escapedPhrase}([^a-z0-9]|$)`, "i");
+            return matcher.test(String(text || ""));
+        }
+
+        function hasAnyExactSearchPhrase(text, phrases) {
+            return phrases.some(phrase => hasExactSearchPhrase(text, phrase));
+        }
+
         function renderSearchSummary(query, articleMatches, topicMatches, pathMatches, matchCount) {
             if (!query) {
                 searchSummary.classList.remove("is-visible");
@@ -579,21 +603,14 @@
 
             if (!preSearchState) preSearchState = captureExpansionState();
 
-            const stopWords = new Set(["add", "and", "for", "how", "the", "to", "use", "with"]);
-            const terms = query.split(/\s+/).filter(t => t.length > 2 && !stopWords.has(t));
-            let targets = [query].concat(terms);
-            for (let [key, arr] of Object.entries(semanticDict)) {
-                if (key.toLowerCase().includes(query) || terms.some(t => key.toLowerCase().includes(t))) {
-                    targets = targets.concat(arr.map(t => t.toLowerCase()));
-                }
-            }
+            const targets = [query];
 
             let matchCount = 0;
             function searchTree(node) {
                 const name = (node.data.name || "").toLowerCase();
                 const summary = (node.data.summary || "").toLowerCase();
 
-                node.isHighlighted = targets.some(t => name.includes(t) || (summary && summary.includes(t)));
+                node.isHighlighted = hasAnyExactSearchPhrase(name, targets) || hasAnyExactSearchPhrase(summary, targets);
                 if (node.isHighlighted && !node.children && !node._children) matchCount++;
 
                 node.isOnPath = false;
