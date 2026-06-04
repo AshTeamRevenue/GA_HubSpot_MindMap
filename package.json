@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {}
+}
