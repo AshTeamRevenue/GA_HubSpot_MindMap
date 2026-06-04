@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="data.js?v=total-mastery-20260504"></script>
+    <script src="data.js?v=total-mastery-20260604"></script>
     <style>
         :root { 
             --hs-orange: #ff7a59;
@@ -63,9 +63,57 @@
             white-space: nowrap;
         }
 
+        .instruction-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 42px;
+            padding: 0 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(7, 13, 24, 0.48);
+            color: #c8d5e8;
+            font-size: 13px;
+            line-height: 1.45;
+            z-index: 8;
+        }
+
+        .instruction-bar strong {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
         #canvas-wrapper { flex: 1; width: 100%; position: relative; }
         #canvas { width: 100%; height: 100%; cursor: grab; }
         #canvas:active { cursor: grabbing; }
+
+        .map-controls {
+            position: absolute;
+            left: 28px;
+            bottom: 24px;
+            display: flex;
+            gap: 8px;
+            z-index: 7;
+        }
+
+        .map-control-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--tr-glass-border);
+            background: rgba(11, 19, 32, 0.86);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+        }
+
+        .map-control-btn:hover {
+            border-color: rgba(0, 189, 165, 0.55);
+            background: rgba(0, 189, 165, 0.18);
+        }
 
         .node { cursor: pointer; }
         .node circle { fill: var(--tr-dark-bg); stroke-width: 3px; transition: all 0.4s ease; }
@@ -266,9 +314,18 @@
         <input type="text" id="semantic-search" class="search-input" placeholder="Search concepts (e.g. 'tracking')...">
     </div>
 </div>
+<div class="instruction-bar">
+    <strong>Click any node to explore.</strong>
+    <span>Click a leaf node to open the HubSpot article.</span>
+</div>
 <div id="canvas-wrapper">
     <svg id="canvas"></svg>
     <aside id="search-summary" class="search-summary" aria-live="polite"></aside>
+    <div class="map-controls" aria-label="Map controls">
+        <button id="zoom-in-btn" class="map-control-btn" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-out-btn" class="map-control-btn" type="button" aria-label="Zoom out">-</button>
+        <button id="recenter-btn" class="map-control-btn" type="button" aria-label="Recenter map">↺</button>
+    </div>
 </div>
 <div id="node-tooltip" class="node-tooltip"></div>
 
@@ -386,20 +443,20 @@
         "Users, Teams & Permissions": "Control access, teams, seats, sharing, and user-level settings.",
         "Security & Compliance": "Protect the portal with audit, authentication, privacy, and compliance controls.",
         "Portal Architecture": "Structure account-level settings, assets, brands, and marketing contact rules.",
-        "Lead Capture": "Capture demand through tracking, forms, pages, chat, email, and campaign assets.",
+        "Email & Campaigns": "Capture demand through tracking, forms, pages, chat, email, and campaign assets.",
         "Tracking & Source Capture": "Install tracking and understand where contacts and conversions come from.",
         "Conversion Tools": "Build forms, CTAs, meetings, chat, and pages that convert visitors.",
         "Email Marketing": "Create, send, test, and analyze marketing email performance.",
         "Campaign Management": "Create, organize, govern, and maintain HubSpot marketing campaigns.",
         "Campaign Conversion": "Plan campaigns and measure influenced contacts, conversions, and ROI.",
         "Content & Campaign Assets": "Manage social, blog, assets, smart content, and campaign materials.",
-        "Segmentation & Qualification": "Group, score, route, and qualify contacts for the right next action.",
+        "Lists & Lead Routing": "Group, score, route, and qualify contacts for the right next action.",
         "Lists & Audiences": "Build segments and audiences for targeting, reporting, and automation.",
         "Scoring": "Prioritize contacts and accounts using fit, intent, behavior, and health signals.",
         "Lifecycle Qualification": "Move contacts through qualification stages and handoffs.",
         "Routing & Assignment": "Send leads, tickets, and records to the right owner or team.",
         "Prospecting": "Use prospecting tools and integrations to identify and work target accounts.",
-        "Sales Execution": "Run pipeline work, quotes, sales activities, commerce, and rep enablement.",
+        "Deals & Pipeline": "Run pipeline work, quotes, sales activities, commerce, and rep enablement.",
         "Pipeline Execution": "Create, review, and manage deals as they move through the sales pipeline.",
         "Commerce": "Manage quotes, payments, invoices, subscriptions, and revenue transactions.",
         "Sales Activities": "Use tasks, sequences, calls, and reminders to keep selling work moving.",
@@ -411,7 +468,7 @@
         "Workflow Actions": "Configure workflow steps that create work, update data, and notify teams.",
         "Workflow Automation": "Automate real operating motions like approvals, renewals, and closed-won handoffs.",
         "Service Automation": "Automate support routing, inbox channels, and service follow-up work.",
-        "Customer Experience": "Operate support, help desk, customer portal, feedback, and success motions.",
+        "Help Desk & Support": "Operate support, help desk, customer portal, feedback, and success motions.",
         "Service Operations": "Set up help desk processes, routing, SLAs, and service queues.",
         "Support Experience": "Manage inbox, tickets, portal, knowledge base, chat, and support channels.",
         "Customer Success": "Run onboarding, projects, surveys, and customer feedback loops.",
@@ -646,14 +703,26 @@
         
         svg.call(zoom);
 
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            svg.transition().duration(250).call(zoom.scaleBy, 1.25);
+        });
+
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            svg.transition().duration(250).call(zoom.scaleBy, 0.8);
+        });
+
+        document.getElementById('recenter-btn').addEventListener('click', () => {
+            update(root);
+        });
+
         const vpColors = {
             "Core CRM": "#0A98FF",
             "Data & Governance": "#66c2a5",
-            "Lead Capture": "#a6d854",
-            "Segmentation & Qualification": "#ffd92f",
-            "Sales Execution": "#ffb84d",
+            "Email & Campaigns": "#a6d854",
+            "Lists & Lead Routing": "#ffd92f",
+            "Deals & Pipeline": "#ffb84d",
             "Automation": "#00bda5",
-            "Customer Experience": "#8da0cb",
+            "Help Desk & Support": "#8da0cb",
             "Marketing Hub": "#a6d854",
             "Sales Hub": "#ffd92f",
             "Service Hub": "#8da0cb",
@@ -681,11 +750,11 @@
         const hubOrder = [
             "Core CRM",
             "Data & Governance",
-            "Lead Capture",
-            "Segmentation & Qualification",
-            "Sales Execution",
+            "Email & Campaigns",
+            "Lists & Lead Routing",
+            "Deals & Pipeline",
             "Automation",
-            "Customer Experience",
+            "Help Desk & Support",
             "Reporting",
             "Integrations & APIs",
             "Marketing Hub",
@@ -716,7 +785,7 @@
                 "Security & Compliance",
                 "Portal Architecture"
             ],
-            "Lead Capture": [
+            "Email & Campaigns": [
                 "Tracking & Source Capture",
                 "Conversion Tools",
                 "Email Marketing",
@@ -724,14 +793,14 @@
                 "Campaign Conversion",
                 "Content & Campaign Assets"
             ],
-            "Segmentation & Qualification": [
+            "Lists & Lead Routing": [
                 "Lists & Audiences",
                 "Scoring",
                 "Lifecycle Qualification",
                 "Routing & Assignment",
                 "Prospecting"
             ],
-            "Sales Execution": [
+            "Deals & Pipeline": [
                 "Pipeline Execution",
                 "Commerce",
                 "Sales Activities",
@@ -745,7 +814,7 @@
                 "Workflow Automation",
                 "Service Automation"
             ],
-            "Customer Experience": [
+            "Help Desk & Support": [
                 "Service Operations",
                 "Support Experience",
                 "Customer Success"
@@ -852,17 +921,6 @@
             }
 
             update(root);
-            
-            const initialScale = 0.85;
-            const startX = wrapper.clientWidth * 0.15;
-            const startY = wrapper.clientHeight / 2;
-            
-            if (animate) {
-                svg.transition().duration(750)
-                   .call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
-            } else {
-                svg.call(zoom.transform, d3.zoomIdentity.translate(startX, startY).scale(initialScale));
-            }
         }
 
         resetMap(false);
@@ -971,46 +1029,40 @@
 
         function applyCompactSearchLayout(nodes) {
             const visible = new Set(nodes);
-            const topicRowGap = 56;
-            const topicLift = 106;
-            const branchRowGap = 48;
-            const branchColumnGap = 370;
-            const branchDirections = new Map();
+            const hubGap = 220;
+            const topicGap = 92;
+            const rowGap = 74;
+            const columnGap = 380;
+            const maxRows = 8;
 
-            function layoutNode(node) {
-                const visibleChildren = (node.children || []).filter(child => visible.has(child));
-                if (node === root) {
-                    visibleChildren.forEach((child, index) => {
-                        child.x = 0;
-                        child.y = 280 + index * 360;
-                        branchDirections.set(child, index % 2 === 0 ? -1 : 1);
-                        layoutNodeChildren(child, child);
-                    });
-                    return 0;
-                }
-                return node.x;
-            }
+            root.x = 0;
+            root.y = 0;
 
-            function layoutNodeChildren(parent, rowNode) {
+            function layoutNodeChildren(parent) {
                 const visibleChildren = (parent.children || []).filter(child => visible.has(child));
                 const count = visibleChildren.length;
                 if (!count) return;
 
                 visibleChildren.forEach((child, childIndex) => {
-                    const direction = branchDirections.get(rowNode) || -1;
-                    if (parent === rowNode) {
-                        child.x = parent.x + direction * (topicLift + (count - 1 - childIndex) * topicRowGap);
-                        child.y = parent.y;
+                    if (parent === root) {
+                        child.x = (childIndex - (count - 1) / 2) * hubGap;
+                        child.y = 300;
+                    } else if (child.depth === 2) {
+                        child.x = parent.x + (childIndex - (count - 1) / 2) * topicGap;
+                        child.y = parent.y + columnGap;
                     } else {
-                        child.x = parent.x + direction * (branchRowGap + (count - 1 - childIndex) * branchRowGap);
-                        child.y = parent.y + branchColumnGap;
+                        const row = childIndex % maxRows;
+                        const column = Math.floor(childIndex / maxRows);
+                        const rowsInColumn = Math.min(maxRows, count - column * maxRows);
+                        child.x = parent.x + (row - (rowsInColumn - 1) / 2) * rowGap;
+                        child.y = parent.y + columnGap + column * columnGap;
                     }
-                    layoutNodeChildren(child, rowNode);
+                    layoutNodeChildren(child);
                 });
             }
 
-            layoutNode(root);
-            const rootOffset = root.x || 0;
+            layoutNodeChildren(root);
+            const rootOffset = d3.mean(nodes, d => d.x) || 0;
             nodes.forEach(d => {
                 d.x -= rootOffset;
             });
@@ -1204,9 +1256,14 @@
                     tx = (fitWidth - tw * s) / 2 - xr[0] * s;
                     ty = (vh - th * s) / 2 - yr[0] * s;
                 } else {
-                    s = 0.85;
-                    tx = vw * 0.48 - source.y * s;
-                    ty = vh * 0.58 - source.x * s;
+                    const xr = d3.extent(nodes, d => d.y);
+                    const yr = d3.extent(nodes, d => d.x);
+                    const tw = Math.max(1, xr[1] - xr[0]);
+                    const th = Math.max(1, yr[1] - yr[0]);
+                    const scaleToFit = Math.min((vw - 120) / tw, (vh - 120) / th) * 0.92;
+                    s = Math.max(0.55, Math.min(0.95, scaleToFit));
+                    tx = (vw - tw * s) / 2 - xr[0] * s;
+                    ty = (vh - th * s) / 2 - yr[0] * s;
                 }
 
                 svg.transition().duration(750)
