@@ -1034,6 +1034,7 @@
             const rowGap = 74;
             const columnGap = 380;
             const maxRows = 8;
+            const articleColumnStart = 300 + (2 * columnGap);
 
             root.x = 0;
             root.y = 0;
@@ -1051,17 +1052,23 @@
                         child.x = parent.x + (childIndex - (count - 1) / 2) * topicGap;
                         child.y = parent.y + columnGap;
                     } else {
-                        const row = childIndex % maxRows;
-                        const column = Math.floor(childIndex / maxRows);
-                        const rowsInColumn = Math.min(maxRows, count - column * maxRows);
-                        child.x = parent.x + (row - (rowsInColumn - 1) / 2) * rowGap;
-                        child.y = parent.y + columnGap + column * columnGap;
+                        return;
                     }
                     layoutNodeChildren(child);
                 });
             }
 
             layoutNodeChildren(root);
+
+            const articleNodes = nodes.filter(d => d.depth >= 3);
+            articleNodes.forEach((article, articleIndex) => {
+                const row = articleIndex % maxRows;
+                const column = Math.floor(articleIndex / maxRows);
+                const rowsInColumn = Math.min(maxRows, articleNodes.length - column * maxRows);
+                article.x = (row - (rowsInColumn - 1) / 2) * rowGap;
+                article.y = articleColumnStart + column * columnGap;
+            });
+
             const rootOffset = d3.mean(nodes, d => d.x) || 0;
             nodes.forEach(d => {
                 d.x -= rootOffset;

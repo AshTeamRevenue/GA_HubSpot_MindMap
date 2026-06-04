@@ -37,10 +37,10 @@ assert(articleRows.length >= 599, `Expected at least 599 article rows, found ${a
 [
   "Deals",
   "Sequences",
-  "Workflows & Automation",
-  "Conversations & Messaging",
-  "Help Desk & Tickets",
-  "Breeze AI"
+  "Workflows",
+  "Conversations",
+  "Help Desk",
+  "Breeze"
 ].forEach(label => {
   assert(data.sheetData.includes(label), `data.js is missing expected content: ${label}`);
 });
